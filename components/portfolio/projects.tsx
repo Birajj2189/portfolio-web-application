@@ -2,51 +2,27 @@
 
 import { ExternalLink, Github, FolderKanban } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { ProjectItem, ProjectStatus } from "@/types/portfolio"
 
-const projects = [
-  {
-    title: "E-Commerce Platform",
-    description:
-      "A full-featured e-commerce platform with real-time inventory management, payment processing, and admin dashboard.",
-    tech: ["Next.js", "Node.js", "MongoDB", "Stripe"],
-    github: "#",
-    demo: "#",
-    status: "COMPLETED",
-    statusColor: "bg-primary text-primary-foreground",
-  },
-  {
-    title: "Task Management App",
-    description:
-      "Collaborative task management application with real-time updates, drag-and-drop interface, and team workspaces.",
-    tech: ["React", "Express", "PostgreSQL", "Socket.io"],
-    github: "#",
-    demo: "#",
-    status: "COMPLETED",
-    statusColor: "bg-primary text-primary-foreground",
-  },
-  {
-    title: "AI Content Generator",
-    description:
-      "AI-powered content generation tool that helps creators write better blog posts, social media content, and marketing copy.",
-    tech: ["Next.js", "OpenAI API", "Tailwind CSS"],
-    github: "#",
-    demo: "#",
-    status: "IN PROGRESS",
-    statusColor: "bg-accent text-accent-foreground",
-  },
-  {
-    title: "Developer Portfolio",
-    description:
-      "This very portfolio you&apos;re viewing! A modern, interactive space to showcase my work and journey as a developer.",
-    tech: ["Next.js", "Tailwind CSS", "Framer Motion"],
-    github: "#",
-    demo: "#",
-    status: "LIVE",
-    statusColor: "bg-chart-3 text-background",
-  },
-]
+interface ProjectsProps {
+  data: ProjectItem[]
+}
 
-export function Projects() {
+const STATUS_STYLES: Record<ProjectStatus, string> = {
+  COMPLETED: "bg-primary text-primary-foreground",
+  IN_PROGRESS: "bg-accent text-accent-foreground",
+  LIVE: "bg-chart-3 text-background",
+}
+
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+  COMPLETED: "COMPLETED",
+  IN_PROGRESS: "IN PROGRESS",
+  LIVE: "LIVE",
+}
+
+export function Projects({ data }: ProjectsProps) {
+  const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
   return (
     <section id="projects" className="dot-pattern px-4 py-24">
       <div className="container mx-auto max-w-6xl">
@@ -59,9 +35,9 @@ export function Projects() {
 
         {/* Projects grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {projects.map((project, index) => (
+          {sorted.map((project, index) => (
             <div
-              key={project.title}
+              key={project.id}
               className="glass-card group rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -71,9 +47,9 @@ export function Projects() {
                   {project.title}
                 </h3>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${project.statusColor}`}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_STYLES[project.status]}`}
                 >
-                  {project.status}
+                  {STATUS_LABELS[project.status]}
                 </span>
               </div>
 
@@ -82,7 +58,7 @@ export function Projects() {
 
               {/* Tech stack */}
               <div className="mb-6 flex flex-wrap gap-2">
-                {project.tech.map((tech) => (
+                {project.techStack?.map((tech) => (
                   <span
                     key={tech}
                     className="rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground"
@@ -94,27 +70,31 @@ export function Projects() {
 
               {/* Actions */}
               <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-border hover:border-primary hover:text-primary"
-                  asChild
-                >
-                  <a href={project.github} target="_blank" rel="noopener noreferrer">
-                    <Github className="mr-2 h-4 w-4" />
-                    Code
-                  </a>
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  asChild
-                >
-                  <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Live Demo
-                  </a>
-                </Button>
+                {project.githubUrl && project.githubUrl !== "#" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-border hover:border-primary hover:text-primary"
+                    asChild
+                  >
+                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                      <Github className="mr-2 h-4 w-4" />
+                      Code
+                    </a>
+                  </Button>
+                ) : null}
+                {project.demoUrl && project.demoUrl !== "#" ? (
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    asChild
+                  >
+                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Live Demo
+                    </a>
+                  </Button>
+                ) : null}
               </div>
             </div>
           ))}

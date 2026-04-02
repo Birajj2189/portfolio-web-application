@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Command, Menu, X } from "lucide-react"
+import { Command, Menu, X, LogIn, LogOut, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useAuthStore } from "@/store/auth.store"
 
 interface NavbarProps {
   onOpenCommandPalette: () => void
@@ -20,6 +21,7 @@ const navLinks = [
 export function Navbar({ onOpenCommandPalette }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { user, openAuthModal, logout } = useAuthStore()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,7 +58,8 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Command palette */}
           <Button
             variant="outline"
             size="sm"
@@ -66,6 +69,36 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
             <Command className="h-4 w-4" />
             <span className="text-xs">Ctrl+K</span>
           </Button>
+
+          {/* Auth — desktop */}
+          {user ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <div className="flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-3 py-1.5 text-sm">
+                <User className="h-3.5 w-3.5 text-primary" />
+                <span className="max-w-[140px] truncate font-medium text-foreground">
+                  {user.email}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={logout}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openAuthModal("login")}
+              className="hidden items-center gap-2 border-primary/50 text-primary hover:bg-primary/10 md:flex"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          )}
 
           {/* Mobile Menu Button */}
           <Button
@@ -92,6 +125,52 @@ export function Navbar({ onOpenCommandPalette }: NavbarProps) {
               {link.name}
             </a>
           ))}
+
+          {/* Auth — mobile */}
+          <div className="mt-3 pt-3">
+            {user ? (
+              <div className="flex items-center justify-between">
+                <div className="flex min-w-0 items-center gap-2 text-sm">
+                  <User className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate font-medium text-foreground">{user.email}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    logout()
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    openAuthModal("login")
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex-1 border-border text-muted-foreground"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    openAuthModal("signup")
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="flex-1 bg-primary text-primary-foreground"
+                >
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </nav>

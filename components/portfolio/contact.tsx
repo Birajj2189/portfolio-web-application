@@ -12,15 +12,13 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useContactStore } from "@/store/contact.store"
+import type { ContactData } from "@/types/portfolio"
 
-const socialLinks = [
-  { name: "GitHub", icon: Github, href: "#", color: "hover:text-foreground" },
-  { name: "LinkedIn", icon: Linkedin, href: "#", color: "hover:text-blue-500" },
-  { name: "Twitter", icon: Twitter, href: "#", color: "hover:text-sky-500" },
-  { name: "Email", icon: Mail, href: "mailto:hello@example.com", color: "hover:text-primary" },
-]
+interface ContactProps {
+  data: ContactData
+}
 
-export function Contact() {
+export function Contact({ data }: ContactProps) {
   const { formData, status, errorMessage, setField, submit, resetForm } = useContactStore()
   const isSubmitting = status === "loading"
 
@@ -28,6 +26,19 @@ export function Contact() {
     e.preventDefault()
     await submit()
   }
+
+  const socialLinks = [
+    ...(data.githubUrl
+      ? [{ name: "GitHub", icon: Github, href: data.githubUrl, color: "hover:text-foreground" }]
+      : []),
+    ...(data.linkedinUrl
+      ? [{ name: "LinkedIn", icon: Linkedin, href: data.linkedinUrl, color: "hover:text-blue-500" }]
+      : []),
+    ...(data.twitterUrl
+      ? [{ name: "Twitter", icon: Twitter, href: data.twitterUrl, color: "hover:text-sky-500" }]
+      : []),
+    { name: "Email", icon: Mail, href: `mailto:${data.email}`, color: "hover:text-primary" },
+  ]
 
   return (
     <section id="contact" className="px-4 py-24">
@@ -51,7 +62,9 @@ export function Contact() {
                 <CheckCircle className="h-14 w-14 text-primary" />
                 <h3 className="text-xl font-semibold">Message Sent!</h3>
                 <p className="text-muted-foreground">
-                  Thanks for reaching out. I&apos;ll get back to you within 24 hours.
+                  {data.responseTime
+                    ? `I'll get back to you — ${data.responseTime.toLowerCase()}.`
+                    : "Thanks for reaching out. I'll get back to you within 24 hours."}
                 </p>
                 <Button variant="outline" onClick={resetForm}>
                   Send Another Message
@@ -85,7 +98,7 @@ export function Contact() {
                   </label>
                   <input
                     type="email"
-                    id="email"
+                    id="contact-email"
                     value={formData.email}
                     onChange={(e) => setField("email", e.target.value)}
                     required
@@ -130,16 +143,13 @@ export function Contact() {
 
           {/* Info & Social */}
           <div className="flex flex-col justify-center space-y-8">
-            {/* AI Summary style card like reference */}
+            {/* Quick Info card */}
             <div className="glass-card rounded-xl border-l-4 border-primary p-6">
               <div className="mb-3 flex items-center gap-3">
                 <Sparkles className="h-5 w-5 text-primary" />
                 <span className="text-sm text-muted-foreground">Quick Info</span>
               </div>
-              <p className="text-foreground">
-                Based in your city. Open to remote opportunities worldwide. Currently interested in
-                full-stack roles and exciting startup projects.
-              </p>
+              <p className="text-foreground">{data.quickInfoText}</p>
             </div>
 
             {/* Social Links */}
@@ -164,11 +174,9 @@ export function Contact() {
             <div className="glass-card rounded-xl p-6">
               <div className="mb-2 flex items-center gap-3">
                 <span className="h-3 w-3 animate-pulse rounded-full bg-primary" />
-                <span className="font-medium text-foreground">Available for work</span>
+                <span className="font-medium text-foreground">{data.availability}</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Response time: Usually within 24 hours
-              </p>
+              <p className="text-sm text-muted-foreground">Response time: {data.responseTime}</p>
             </div>
           </div>
         </div>

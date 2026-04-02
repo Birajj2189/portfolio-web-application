@@ -2,8 +2,13 @@
 
 import { ArrowDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import type { HeroData } from "@/types/portfolio"
 
-export function Hero() {
+interface HeroProps {
+  data: HeroData
+}
+
+export function Hero({ data }: HeroProps) {
   return (
     <section className="dot-pattern relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* Gradient orbs */}
@@ -15,10 +20,12 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
         {/* Status badge */}
-        <div className="glass-card animate-slide-up mb-8 inline-flex items-center gap-2 rounded-full px-4 py-2">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-          <span className="text-sm text-muted-foreground">Available for new opportunities</span>
-        </div>
+        {data.available && (
+          <div className="glass-card animate-slide-up mb-8 inline-flex items-center gap-2 rounded-full px-4 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+            <span className="text-sm text-muted-foreground">Available for new opportunities</span>
+          </div>
+        )}
 
         {/* Main heading */}
         <h1
@@ -26,7 +33,7 @@ export function Hero() {
           style={{ animationDelay: "0.1s" }}
         >
           <span className="text-foreground">Hi, I&apos;m </span>
-          <span className="text-primary">Your Name</span>
+          <span className="text-primary">{data.name}</span>
         </h1>
 
         {/* Role */}
@@ -35,9 +42,7 @@ export function Hero() {
           style={{ animationDelay: "0.2s" }}
         >
           <span className="h-px w-12 bg-border" />
-          <span className="font-mono text-xl text-muted-foreground sm:text-2xl">
-            Software Engineer
-          </span>
+          <span className="font-mono text-xl text-muted-foreground sm:text-2xl">{data.role}</span>
           <span className="h-px w-12 bg-border" />
         </div>
 
@@ -46,8 +51,7 @@ export function Hero() {
           className="animate-slide-up mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
           style={{ animationDelay: "0.3s" }}
         >
-          Building digital experiences that blend elegant design with robust engineering. Welcome to
-          my virtual space.
+          {data.tagline}
         </p>
 
         {/* CTA Buttons */}
@@ -61,7 +65,7 @@ export function Hero() {
             onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
           >
             <Sparkles className="mr-2 h-5 w-5" />
-            Explore My Space
+            {data.ctaPrimaryLabel}
           </Button>
           <Button
             variant="outline"
@@ -71,7 +75,7 @@ export function Hero() {
               document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
             }
           >
-            View Projects
+            {data.ctaSecondaryLabel}
           </Button>
         </div>
 

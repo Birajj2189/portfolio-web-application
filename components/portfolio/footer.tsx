@@ -1,8 +1,13 @@
 "use client"
 
 import { Heart, Code2 } from "lucide-react"
+import type { FooterData } from "@/types/portfolio"
 
-export function Footer() {
+interface FooterProps {
+  data: FooterData
+}
+
+export function Footer({ data }: FooterProps) {
   return (
     <footer className="border-t border-border px-4 py-8">
       <div className="container mx-auto max-w-6xl">
@@ -11,11 +16,13 @@ export function Footer() {
             <Code2 className="h-4 w-4" />
             <span>Built with</span>
             <Heart className="h-4 w-4 fill-accent text-accent" />
-            <span>using Next.js & Tailwind CSS</span>
+            <span>{data.tagline}</span>
           </div>
 
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>&copy; {new Date().getFullYear()} DevSpace. All rights reserved.</span>
+            <span>
+              &copy; {new Date().getFullYear()} {data.copyrightName}. All rights reserved.
+            </span>
           </div>
         </div>
       </div>
