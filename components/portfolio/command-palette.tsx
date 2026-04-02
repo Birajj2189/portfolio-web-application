@@ -14,6 +14,7 @@ import {
   Github,
   Linkedin,
   Download,
+  Images,
 } from "lucide-react"
 
 interface CommandPaletteProps {
@@ -51,6 +52,14 @@ const commands = [
     icon: Beaker,
     action: () => document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" }),
     shortcut: "L",
+  },
+  {
+    name: "Gallery",
+    icon: Images,
+    action: () => {
+      globalThis.location.href = "/gallery"
+    },
+    shortcut: "Y",
   },
   {
     name: "Resume",

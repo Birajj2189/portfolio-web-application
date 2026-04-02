@@ -78,17 +78,19 @@ export function Hero({ data }: HeroProps) {
             {data.ctaSecondaryLabel}
           </Button>
         </div>
+      </div>
 
-        {/* Scroll indicator */}
-        <div className="animate-float absolute bottom-10 left-1/2 -translate-x-1/2">
-          <a
-            href="#about"
-            className="flex flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
-          >
-            <span className="text-sm">Scroll to explore</span>
-            <ArrowDown className="h-5 w-5" />
-          </a>
-        </div>
+      {/* Scroll indicator — anchored to the section bottom */}
+      <div className="animate-float absolute bottom-8 left-1/2 -translate-x-1/2">
+        <a
+          href="#about"
+          className="group glass-card flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm text-muted-foreground transition-all hover:border-primary/50 hover:text-primary"
+        >
+          <span className="font-medium tracking-wide">Scroll to explore</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 transition-colors group-hover:bg-primary/40">
+            <ArrowDown className="h-3.5 w-3.5 text-primary" />
+          </span>
+        </a>
       </div>
 
       {/* Terminal decoration */}

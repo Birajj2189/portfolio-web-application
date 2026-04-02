@@ -13,6 +13,7 @@ import { CommandPalette } from "@/components/portfolio/command-palette"
 import { Footer } from "@/components/portfolio/footer"
 import { AuthModal } from "@/components/portfolio/auth-modal"
 import { GreetingBar } from "@/components/portfolio/greeting-bar"
+import { GalleryTeaser } from "@/components/portfolio/gallery-teaser"
 import { LoadingScreen, ErrorScreen } from "@/components/portfolio/loading-screen"
 import { useUIStore } from "@/store/ui.store"
 import { useAuthStore } from "@/store/auth.store"
@@ -68,6 +69,7 @@ export default function Portfolio() {
       <Projects data={data.projects} />
       <Journey data={data.journey} />
       <Playground />
+      <GalleryTeaser />
       <Resume data={data.resume} />
       <Contact data={data.contact} />
       <Footer data={data.footer} />
