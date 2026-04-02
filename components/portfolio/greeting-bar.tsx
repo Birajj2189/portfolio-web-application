@@ -253,7 +253,6 @@ export function GreetingBar() {
   const { user, logout } = useAuthStore()
   const [dismissed, setDismissed] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [bubbleDismissed, setBubbleDismissed] = useState(false)
   const [timeCtx, setTimeCtx] = useState<TimeContext | null>(null)
 
   // Defer setState out of the effect body (react-hooks/set-state-in-effect) + keep SSR/client first paint aligned
@@ -270,18 +269,19 @@ export function GreetingBar() {
 
   return (
     <>
-      <div className="animate-slide-up fixed bottom-0 left-4 z-50 flex items-end gap-3">
-        {/* ── Avatar ── */}
-        <div className="group flex flex-col items-center">
-          {/* Hover dismiss */}
-          <button
-            onClick={() => setDismissed(true)}
-            aria-label="Dismiss"
-            className="mb-1 flex h-5 w-5 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900 text-zinc-400 opacity-0 shadow-lg transition-all group-hover:opacity-100 hover:bg-red-500 hover:text-white"
-          >
-            <X className="h-3 w-3" />
-          </button>
+      <div className="animate-slide-up fixed bottom-0 left-4 z-50 flex items-end gap-3 pt-2">
+        {/* Single dismiss for avatar + bubble */}
+        <button
+          type="button"
+          onClick={() => setDismissed(true)}
+          aria-label="Dismiss greeting"
+          className="absolute top-0 right-0 z-[60] flex h-7 w-7 translate-x-1 -translate-y-1 items-center justify-center rounded-full border border-white/15 bg-[#18181b] text-zinc-400 shadow-lg transition-colors hover:border-red-500/50 hover:bg-red-500 hover:text-white"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
+        {/* ── Avatar ── */}
+        <div className="flex flex-col items-center">
           <div className="h-[130px] w-[86px] drop-shadow-[0_4px_24px_rgba(99,102,241,0.35)]">
             <CoderAvatar />
           </div>
@@ -291,72 +291,61 @@ export function GreetingBar() {
         </div>
 
         {/* ── Thought bubble ── */}
-        {!bubbleDismissed && (
-          <div className="relative mb-10">
-            {/* Connecting dots from avatar to bubble */}
-            <div className="absolute -bottom-4 -left-4 flex items-end gap-[3px]">
-              <span className="block h-2 w-2 rounded-full bg-[#18181b] ring-1 ring-white/10" />
-              <span className="block h-3 w-3 rounded-full bg-[#18181b] ring-1 ring-white/10" />
+        <div className="relative mb-10">
+          {/* Connecting dots from avatar to bubble */}
+          <div className="absolute -bottom-4 -left-4 flex items-end gap-[3px]">
+            <span className="block h-2 w-2 rounded-full bg-[#18181b] ring-1 ring-white/10" />
+            <span className="block h-3 w-3 rounded-full bg-[#18181b] ring-1 ring-white/10" />
+          </div>
+
+          {/* Bubble — fully solid, no transparency */}
+          <div className="w-[270px] rounded-2xl rounded-bl-sm border border-white/10 bg-[#18181b] shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_0_1px_rgba(99,102,241,0.15)]">
+            {/* Top stripe — indigo accent */}
+            <div className="flex items-center gap-2 rounded-t-2xl border-b border-white/8 bg-indigo-950/60 px-4 py-2.5">
+              <span className="font-mono text-lg">{display.emoji}</span>
+              <span className="font-mono text-xs font-semibold tracking-widest text-indigo-300 uppercase">
+                {display.greeting}
+              </span>
+              {/* Fake terminal dots */}
+              <div className="ml-auto flex gap-1">
+                <span className="h-2 w-2 rounded-full bg-red-500/70" />
+                <span className="h-2 w-2 rounded-full bg-yellow-500/70" />
+                <span className="h-2 w-2 rounded-full bg-green-500/70" />
+              </div>
             </div>
 
-            {/* Dismiss bubble */}
-            <button
-              onClick={() => setBubbleDismissed(true)}
-              aria-label="Dismiss greeting"
-              className="absolute -top-2.5 -right-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-zinc-800 text-zinc-400 shadow-lg transition-colors hover:bg-red-500 hover:text-white"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            {/* Body */}
+            <div className="px-4 py-3">
+              {/* Greeting line */}
+              <p className="font-mono text-sm leading-snug text-white">
+                <span className="text-indigo-400">hey </span>
+                <span className="font-bold text-sky-300">{emailHandle(user.email)}</span>
+                <span className="text-white/60"> ~$</span>
+              </p>
 
-            {/* Bubble — fully solid, no transparency */}
-            <div className="w-[270px] rounded-2xl rounded-bl-sm border border-white/10 bg-[#18181b] shadow-[0_12px_40px_rgba(0,0,0,0.7),0_0_0_1px_rgba(99,102,241,0.15)]">
-              {/* Top stripe — indigo accent */}
-              <div className="flex items-center gap-2 rounded-t-2xl border-b border-white/8 bg-indigo-950/60 px-4 py-2.5">
-                <span className="font-mono text-lg">{display.emoji}</span>
-                <span className="font-mono text-xs font-semibold tracking-widest text-indigo-300 uppercase">
-                  {display.greeting}
-                </span>
-                {/* Fake terminal dots */}
-                <div className="ml-auto flex gap-1">
-                  <span className="h-2 w-2 rounded-full bg-red-500/70" />
-                  <span className="h-2 w-2 rounded-full bg-yellow-500/70" />
-                  <span className="h-2 w-2 rounded-full bg-green-500/70" />
-                </div>
-              </div>
+              {/* Quip — styled like a terminal comment */}
+              <p className="mt-1.5 font-mono text-xs leading-relaxed text-emerald-400">
+                <span className="text-zinc-600"># </span>
+                {display.quip}
+              </p>
 
-              {/* Body */}
-              <div className="px-4 py-3">
-                {/* Greeting line */}
-                <p className="font-mono text-sm leading-snug text-white">
-                  <span className="text-indigo-400">hey </span>
-                  <span className="font-bold text-sky-300">{emailHandle(user.email)}</span>
-                  <span className="text-white/60"> ~$</span>
-                </p>
+              <p className="mt-1 font-mono text-xs text-zinc-500">Welcome to my portfolio ✦</p>
 
-                {/* Quip — styled like a terminal comment */}
-                <p className="mt-1.5 font-mono text-xs leading-relaxed text-emerald-400">
-                  <span className="text-zinc-600"># </span>
-                  {display.quip}
-                </p>
+              {/* Divider */}
+              <div className="my-3 h-px bg-white/6" />
 
-                <p className="mt-1 font-mono text-xs text-zinc-500">Welcome to my portfolio ✦</p>
-
-                {/* Divider */}
-                <div className="my-3 h-px bg-white/6" />
-
-                {/* Sign out */}
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="flex items-center gap-1.5 font-mono text-xs text-zinc-600 transition-colors hover:text-red-400"
-                >
-                  <LogOut className="h-3 w-3" />
-                  <span>logout</span>
-                  <span className="text-zinc-700">--session</span>
-                </button>
-              </div>
+              {/* Sign out */}
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="flex items-center gap-1.5 font-mono text-xs text-zinc-600 transition-colors hover:text-red-400"
+              >
+                <LogOut className="h-3 w-3" />
+                <span>logout</span>
+                <span className="text-zinc-700">--session</span>
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <LogoutConfirm
