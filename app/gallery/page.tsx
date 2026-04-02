@@ -177,10 +177,10 @@ function BentoTile({ tile, onOpen }: Readonly<BentoTileProps>) {
 function GallerySkeleton() {
   const items = [
     { id: "sk-a", span: "col-span-2 row-span-2", delay: "0s" },
-    { id: "sk-b", span: "col-span-1 row-span-1", delay: "0.1s" },
-    { id: "sk-c", span: "col-span-1 row-span-1", delay: "0.2s" },
+    { id: "sk-b", span: "col-span-1 row-span-1", delay: "0.05s" },
+    { id: "sk-c", span: "col-span-1 row-span-1", delay: "0.1s" },
     { id: "sk-d", span: "col-span-1 row-span-2", delay: "0.15s" },
-    { id: "sk-e", span: "col-span-2 row-span-1", delay: "0.05s" },
+    { id: "sk-e", span: "col-span-2 row-span-1", delay: "0.2s" },
     { id: "sk-f", span: "col-span-1 row-span-1", delay: "0.25s" },
     { id: "sk-g", span: "col-span-1 row-span-1", delay: "0.3s" },
     { id: "sk-h", span: "col-span-1 row-span-1", delay: "0.35s" },
