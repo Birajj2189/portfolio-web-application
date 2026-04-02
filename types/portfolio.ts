@@ -14,7 +14,10 @@ export interface StrapiResponse<T> {
 // ─────────────────────────────────────────────────────────────────────────────
 export interface HeroData {
   name: string
+  /** Primary role; use `|` in the string for multiple rotating lines, or set `roleVariants` */
   role: string
+  /** Optional explicit list for rotating role text (Strapi repeatable / JSON) */
+  roleVariants?: string[]
   tagline: string
   available: boolean
   ctaPrimaryLabel: string

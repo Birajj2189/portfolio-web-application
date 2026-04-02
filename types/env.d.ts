@@ -17,7 +17,8 @@ declare namespace NodeJS {
     readonly NEXT_PUBLIC_AUTH_REFRESH_PATH?: string
     readonly NEXT_PUBLIC_AUTH_ME_PATH?: string
 
-    // Server-side only
+    // Server-side only (Next rewrites — see next.config.mjs)
+    readonly AUTH_SERVICE_URL?: string
     readonly API_SECRET_KEY?: string
   }
 }
