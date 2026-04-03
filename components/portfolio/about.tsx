@@ -2,8 +2,8 @@
 
 import { Code2 } from "lucide-react"
 import { motion, useReducedMotion } from "framer-motion"
+import { AboutCardShell } from "@/components/portfolio/about-card-shell"
 import { Card } from "@/components/ui/card"
-import { CosmicParallaxBg } from "@/components/ui/parallax-cosmic-background"
 import { SplineScene } from "@/components/ui/spline-scene"
 import { Spotlight } from "@/components/ui/spotlight"
 import {
@@ -47,9 +47,8 @@ export function About({ data }: AboutProps) {
   return (
     <section
       id="about"
-      className="relative flex min-h-screen scroll-mt-24 flex-col justify-center overflow-hidden px-4 py-16 sm:py-20 md:py-24 lg:py-28"
+      className="about-section-minimal relative flex min-h-screen scroll-mt-24 flex-col justify-center px-4 py-16 sm:py-20 md:py-24 lg:py-28"
     >
-      <CosmicParallaxBg loop={!reduce} showOverlayText={false} className="min-h-full" />
       <div className="relative z-10 container mx-auto max-w-6xl">
         <motion.div
           variants={reduce ? undefined : sectionFlow}
@@ -66,80 +65,82 @@ export function About({ data }: AboutProps) {
           </motion.div>
 
           <motion.div variants={reduce ? undefined : sectionFlowItem}>
-            <Card
-              className={cn(
-                "relative flex min-h-0 w-full flex-col overflow-hidden border-border/60 bg-card/85 p-0 shadow-xl backdrop-blur-md",
-                "lg:min-h-[min(560px,72vh)] lg:flex-row"
-              )}
-            >
-              <Spotlight
-                className="-top-40 left-0 md:-top-32 md:left-[10%] lg:-top-24 lg:left-[18%]"
-                fill="oklch(0.75 0.15 180)"
-              />
+            <AboutCardShell reducedMotion={!!reduce}>
+              <Card
+                className={cn(
+                  "flex min-h-0 w-full flex-col overflow-hidden border-border/50 bg-card/82 p-0 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.55),inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md",
+                  "lg:min-h-[min(560px,72vh)] lg:flex-row"
+                )}
+              >
+                <Spotlight
+                  className="-top-40 left-0 md:-top-32 md:left-[10%] lg:-top-24 lg:left-[18%]"
+                  fill="oklch(0.75 0.15 180)"
+                />
 
-              <div className="relative z-10 flex flex-1 flex-col justify-center gap-6 p-6 sm:p-8 lg:max-w-[min(100%,28rem)] lg:shrink-0 lg:p-10 xl:max-w-md">
-                <motion.div
-                  variants={reduce ? undefined : sectionList}
-                  className="space-y-4 sm:space-y-5"
-                >
-                  {bioParagraphs.length > 0 ? (
-                    bioParagraphs.map((para, i) => (
+                <div className="relative z-10 flex flex-1 flex-col justify-center gap-6 p-6 sm:p-8 lg:max-w-[min(100%,28rem)] lg:shrink-0 lg:p-10 xl:max-w-md">
+                  <motion.div
+                    variants={reduce ? undefined : sectionList}
+                    className="space-y-4 sm:space-y-5"
+                  >
+                    {bioParagraphs.length > 0 ? (
+                      bioParagraphs.map((para, i) => (
+                        <motion.p
+                          key={i}
+                          variants={reduce ? undefined : sectionListItem}
+                          className="text-base leading-relaxed text-muted-foreground sm:text-lg"
+                        >
+                          {para}
+                        </motion.p>
+                      ))
+                    ) : (
                       <motion.p
-                        key={i}
                         variants={reduce ? undefined : sectionListItem}
                         className="text-base leading-relaxed text-muted-foreground sm:text-lg"
                       >
-                        {para}
+                        Passionate software engineer crafting elegant digital experiences.
                       </motion.p>
-                    ))
-                  ) : (
-                    <motion.p
-                      variants={reduce ? undefined : sectionListItem}
-                      className="text-base leading-relaxed text-muted-foreground sm:text-lg"
-                    >
-                      Passionate software engineer crafting elegant digital experiences.
-                    </motion.p>
-                  )}
-                </motion.div>
-
-                {data.techStack && data.techStack.length > 0 ? (
-                  <motion.div
-                    variants={reduce ? undefined : sectionList}
-                    className="flex flex-wrap gap-2 border-t border-border/50 pt-5"
-                  >
-                    {data.techStack.map((tech) => (
-                      <motion.span
-                        key={tech}
-                        variants={reduce ? undefined : sectionListItem}
-                        className="rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-muted-foreground sm:text-sm"
-                      >
-                        {tech}
-                      </motion.span>
-                    ))}
+                    )}
                   </motion.div>
-                ) : null}
-              </div>
 
-              <div
-                className={cn(
-                  "relative z-10 min-h-[260px] w-full flex-1 sm:min-h-[320px]",
-                  "lg:min-h-0 lg:min-w-0"
-                )}
-              >
-                {reduce ? (
-                  <div className="flex h-full min-h-[inherit] items-center justify-center bg-muted/25 px-6 text-center text-sm text-muted-foreground">
-                    3D scene is hidden when reduced motion is enabled.
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 min-h-[260px] sm:min-h-[320px] lg:min-h-full">
-                    <SplineScene
-                      scene={sceneUrl}
-                      className="!absolute inset-0 min-h-full min-w-full"
-                    />
-                  </div>
-                )}
-              </div>
-            </Card>
+                  {data.techStack && data.techStack.length > 0 ? (
+                    <motion.div
+                      variants={reduce ? undefined : sectionList}
+                      className="flex flex-wrap gap-2 border-t border-border/50 pt-5"
+                    >
+                      {data.techStack.map((tech) => (
+                        <motion.span
+                          key={tech}
+                          variants={reduce ? undefined : sectionListItem}
+                          className="rounded-full border border-border/60 bg-background/40 px-3 py-1 text-xs text-muted-foreground sm:text-sm"
+                        >
+                          {tech}
+                        </motion.span>
+                      ))}
+                    </motion.div>
+                  ) : null}
+                </div>
+
+                <div
+                  className={cn(
+                    "relative z-10 min-h-[260px] w-full flex-1 sm:min-h-[320px]",
+                    "lg:min-h-0 lg:min-w-0"
+                  )}
+                >
+                  {reduce ? (
+                    <div className="flex h-full min-h-[inherit] items-center justify-center bg-muted/25 px-6 text-center text-sm text-muted-foreground">
+                      3D scene is hidden when reduced motion is enabled.
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 min-h-[260px] sm:min-h-[320px] lg:min-h-full">
+                      <SplineScene
+                        scene={sceneUrl}
+                        className="!absolute inset-0 min-h-full min-w-full"
+                      />
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </AboutCardShell>
           </motion.div>
         </motion.div>
       </div>
