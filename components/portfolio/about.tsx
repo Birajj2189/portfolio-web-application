@@ -3,6 +3,7 @@
 import { Code2 } from "lucide-react"
 import { motion, useReducedMotion } from "framer-motion"
 import { Card } from "@/components/ui/card"
+import { CosmicParallaxBg } from "@/components/ui/parallax-cosmic-background"
 import { SplineScene } from "@/components/ui/spline-scene"
 import { Spotlight } from "@/components/ui/spotlight"
 import {
@@ -46,9 +47,10 @@ export function About({ data }: AboutProps) {
   return (
     <section
       id="about"
-      className="flex min-h-screen scroll-mt-24 flex-col justify-center px-4 py-16 sm:py-20 md:py-24 lg:py-28"
+      className="relative flex min-h-screen scroll-mt-24 flex-col justify-center overflow-hidden px-4 py-16 sm:py-20 md:py-24 lg:py-28"
     >
-      <div className="container mx-auto max-w-6xl">
+      <CosmicParallaxBg loop={!reduce} showOverlayText={false} className="min-h-full" />
+      <div className="relative z-10 container mx-auto max-w-6xl">
         <motion.div
           variants={reduce ? undefined : sectionFlow}
           initial={reduce ? false : "hidden"}
