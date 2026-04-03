@@ -68,7 +68,7 @@ export default function Portfolio() {
       <About data={data.about} />
       <Projects data={data.projects} />
       <Journey data={data.journey} />
-      <Playground />
+      <Playground displayName={data.hero.name} />
       <GalleryTeaser />
       <Resume data={data.resume} />
       <Contact data={data.contact} />

@@ -227,3 +227,42 @@
 .animate-slide-up {
   animation: slide-up 0.6s ease-out forwards;
 }
+
+/* Hero — soft vignette & minimal depth (used with prefers-reduced-motion overrides in component) */
+.hero-vignette {
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 88% 72% at 50% 36%,
+    transparent 0%,
+    oklch(0.08 0.02 260 / 0.72) 100%
+  );
+}
+
+.hero-rim-light {
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 120% 80% at 50% 0%,
+    oklch(0.72 0.12 180 / 0.06) 0%,
+    transparent 55%
+  );
+}
+
+@keyframes hero-panel-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-hero-panel-drift {
+  animation: hero-panel-drift 14s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-panel-drift {
+    animation: none;
+  }
+}

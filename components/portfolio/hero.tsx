@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect, useCallback, useRef } from "react"
+import { useMemo, useState, useEffect, useCallback } from "react"
 import {
   motion,
   useMotionValue,
@@ -9,8 +9,10 @@ import {
   AnimatePresence,
   useReducedMotion,
 } from "framer-motion"
-import { ArrowDown, Sparkles, Terminal } from "lucide-react"
+import { ArrowDown, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { HeroProfileJsonPanel } from "@/components/portfolio/hero-profile-json"
+import { buildHeroProfileSummary } from "@/lib/hero-profile-summary"
 import type { HeroData } from "@/types/portfolio"
 
 interface HeroProps {
@@ -108,7 +110,7 @@ function DynamicRole({ lines }: Readonly<{ lines: string[] }>) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-0 font-mono text-xl text-muted-foreground sm:text-2xl"
+            className="absolute inset-x-0 text-center font-mono text-xl text-muted-foreground sm:text-2xl lg:text-left"
           >
             {lines[index]}
           </motion.span>
@@ -118,7 +120,7 @@ function DynamicRole({ lines }: Readonly<{ lines: string[] }>) {
   }
 
   return (
-    <span className="font-mono text-xl text-muted-foreground sm:text-2xl">
+    <span className="block w-full text-center font-mono text-xl text-muted-foreground sm:text-2xl lg:text-left">
       {typed}
       <motion.span
         aria-hidden
@@ -127,412 +129,6 @@ function DynamicRole({ lines }: Readonly<{ lines: string[] }>) {
         transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
       />
     </span>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Interactive playful terminal
-// ─────────────────────────────────────────────────────────────────────────────
-type LogLine = { id: string; kind: "sys" | "cmd" | "out" | "err"; text: string; className?: string }
-
-type EvalResult = { lines: Omit<LogLine, "id">[]; clear?: boolean }
-
-function evalPortfolioCommand(raw: string, displayName: string): EvalResult {
-  const cmd = raw.trim().toLowerCase()
-  const rest = raw
-    .trim()
-    .slice(cmd.split(/\s+/)[0]?.length ?? 0)
-    .trim()
-
-  if (cmd === "clear" || cmd === "cls") return { clear: true, lines: [] }
-  if (!cmd) return { lines: [] }
-
-  const o = (text: string, className?: string): Omit<LogLine, "id"> => ({
-    kind: "out",
-    text,
-    className,
-  })
-
-  if (cmd === "help" || cmd === "?") {
-    return {
-      lines: [
-        o("Commands worth your keystrokes:", "text-zinc-400"),
-        o(
-          "  whoami · pwd · ls · coffee · sudo … · rm -rf / · git · npm · date · uname\n  echo · touch grass · grep · 42 · motivation · hack · exit",
-          "whitespace-pre-wrap text-zinc-500"
-        ),
-        o("(It’s a toy shell. Real bugs are in production.)", "text-primary/80 italic"),
-      ],
-    }
-  }
-
-  if (cmd === "whoami") {
-    return {
-      lines: [
-        o(displayName, "font-semibold text-primary"),
-        o("…also: human, typo enthusiast, occasional 3am debugger.", "text-zinc-500"),
-      ],
-    }
-  }
-
-  if (cmd === "pwd") {
-    return { lines: [o("/home/creativity/projects/please-hire-me", "text-emerald-400/90")] }
-  }
-
-  if (cmd.startsWith("ls")) {
-    return {
-      lines: [
-        o(
-          "ideas/   side-projects/   node_modules/  (send help)\n" +
-            "dreams.tar.gz   todo-never.md   one-more-tweak.sh",
-          "whitespace-pre-wrap text-zinc-300"
-        ),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("cat ")) {
-    const target = rest.toLowerCase() || "file"
-    return {
-      lines: [
-        o(
-          `cat: ${target}: No such file — try opening the real portfolio sections below.`,
-          "text-amber-400/90"
-        ),
-      ],
-    }
-  }
-
-  if (cmd === "cat") {
-    return {
-      lines: [o("cat: purring not implemented. Try `cat readme.md` for drama.", "text-zinc-400")],
-    }
-  }
-
-  if (cmd.includes("coffee") || cmd === "brew" || cmd.startsWith("brew ")) {
-    return {
-      lines: [
-        o("☕ Starting brew…", "text-zinc-400"),
-        o(
-          "Error: out of beans. Substituting optimism. Exit code: still tired.",
-          "text-rose-300/90"
-        ),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("sudo")) {
-    const wish = raw.replace(/^\s*sudo\s+/i, "").trim() || "be awesome"
-    return {
-      lines: [
-        o(`sudo: nice try — this kiosk runs in user space only.`, "text-amber-400/90"),
-        o(`(If I could, I’d run: ${wish})`, "text-zinc-500 italic"),
-      ],
-    }
-  }
-
-  if (cmd.includes("rm") && cmd.includes("-rf")) {
-    return {
-      lines: [
-        o("rm: refusing to delete reality. This portfolio likes existing.", "text-red-400/90"),
-        o(
-          "…use the dismiss button on the greeting bubble instead. /s",
-          "text-zinc-500 text-[10px]"
-        ),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("git ")) {
-    if (cmd.includes("push")) {
-      return {
-        lines: [
-          o("Enumerating hype… counting stars…", "text-zinc-400"),
-          o("✓ Pushed to origin/main — metaphorically. You’ve got this.", "text-emerald-400/90"),
-        ],
-      }
-    }
-    if (cmd.includes("status")) {
-      return {
-        lines: [
-          o(
-            "On branch main\nYou: unstaged enthusiasm, staged imposter syndrome\nnothing to commit (lies — you’re shipping)",
-            "whitespace-pre-wrap text-zinc-400"
-          ),
-        ],
-      }
-    }
-    if (cmd.includes("commit")) {
-      return { lines: [o('git: "fix: everything" — if only it were that easy.', "text-zinc-400")] }
-    }
-    return { lines: [o("git: that’s valid git energy. Keep going.", "text-primary/80")] }
-  }
-
-  if (cmd.startsWith("npm ")) {
-    if (cmd.includes("install")) {
-      return {
-        lines: [
-          o(
-            "added 847 packages in 42 minutes\nfound 0 vulnerabilities (unrealistic fanfic mode: on)",
-            "whitespace-pre-wrap text-zinc-400"
-          ),
-        ],
-      }
-    }
-    if (cmd.includes("run")) {
-      return {
-        lines: [
-          o(
-            "> portfolio@1.0.0 scroll\n✓ You’re already running — keep exploring.",
-            "whitespace-pre-wrap text-emerald-400/90"
-          ),
-        ],
-      }
-    }
-    if (cmd.includes("start")) {
-      return {
-        lines: [o("Server already started… it’s called your curiosity. 🔥", "text-primary/90")],
-      }
-    }
-    return { lines: [o("npm: sounds productive. Hydrate first.", "text-zinc-400")] }
-  }
-
-  if (cmd === "date") {
-    return {
-      lines: [
-        o(`${new Date().toString()} — statistically, a good day to refactor.`, "text-zinc-300"),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("uname")) {
-    return {
-      lines: [
-        o("PortfolioOS 1.0 (hype_arm64) — built with caffeine & TypeScript", "text-zinc-300"),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("echo ")) {
-    const said = raw.replace(/^\s*echo\s+/i, "").replace(/^["']|["']$/g, "")
-    return { lines: [o(said || "…", "text-zinc-200")] }
-  }
-
-  if (cmd === "touch grass") {
-    return {
-      lines: [
-        o("touch: cannot create 'grass': Outside not found in $PATH", "text-amber-400/90"),
-        o("(Go for a walk after this scroll, yeah?)", "text-zinc-500"),
-      ],
-    }
-  }
-
-  if (cmd.startsWith("grep ")) {
-    return {
-      lines: [
-        o(
-          "grep: motivation found in ./you — use -i for self-doubt (case insensitive)",
-          "text-emerald-400/85"
-        ),
-      ],
-    }
-  }
-
-  if (cmd === "42") {
-    return { lines: [o("You read Hitchhiker’s Guide. The answer checks out.", "text-primary/90")] }
-  }
-
-  if (cmd === "motivation" || cmd === "hype") {
-    return {
-      lines: [
-        o("Your future self is already proud you opened the terminal.", "text-emerald-400/90"),
-        o("Now close it and ship one small thing. 🚀", "text-zinc-400"),
-      ],
-    }
-  }
-
-  if (cmd === "hack" || cmd === "hack the planet") {
-    return {
-      lines: [
-        o("ACCESS GRANTED… to the public README.", "text-red-400/80"),
-        o("(Just kidding. Be kind to APIs.)", "text-zinc-500"),
-      ],
-    }
-  }
-
-  if (cmd === "exit" || cmd === "quit") {
-    return {
-      lines: [
-        o("There is no escape — only smooth scroll. Try #about.", "text-zinc-400"),
-        o("^D not wired. This is the web; we use anchors here.", "text-zinc-500 italic"),
-      ],
-    }
-  }
-
-  if (cmd === "skill issue") {
-    return {
-      lines: [
-        o("git gud — but gently. Everyone’s faking it until the tests pass.", "text-primary/85"),
-      ],
-    }
-  }
-
-  const unknown = [
-    `command not found: ${raw.trim()} — try \`help\` before blaming npm`,
-    `zsh: ${raw.trim()}: not found (skill issue? jk… try \`whoami\`)`,
-    `bash: ${raw.trim()}: Permission denied — emotionally, not legally`,
-  ]
-  return { lines: [o(unknown[cmd.length % unknown.length]!, "text-rose-300/85")] }
-}
-
-function HeroTerminal({ name }: Readonly<{ name: string }>) {
-  const reduceMotion = useReducedMotion()
-  const [log, setLog] = useState<LogLine[]>([])
-  const [input, setInput] = useState("")
-  const lineId = useRef(0)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  const nextId = useCallback(() => {
-    lineId.current += 1
-    return `t-${lineId.current}`
-  }, [])
-
-  const pushLines = useCallback(
-    (entries: Omit<LogLine, "id">[]) => {
-      if (entries.length === 0) return
-      setLog((prev) => [...prev, ...entries.map((e) => ({ ...e, id: nextId() }))])
-    },
-    [nextId]
-  )
-
-  const resetToIntro = useCallback(() => {
-    setLog([
-      { id: nextId(), kind: "sys", text: "Portfolio shell · type `help` for silly commands." },
-      {
-        id: nextId(),
-        kind: "sys",
-        text: "Try: coffee · sudo make sandwich · rm -rf / · motivation",
-      },
-    ])
-  }, [nextId])
-
-  // Boot intro (staggered or instant)
-  useEffect(() => {
-    if (reduceMotion) {
-      const id = globalThis.requestAnimationFrame(() => resetToIntro())
-      return () => cancelAnimationFrame(id)
-    }
-    const t1 = globalThis.setTimeout(() => {
-      setLog([
-        { id: nextId(), kind: "sys", text: "Portfolio shell · type `help` for silly commands." },
-      ])
-    }, 450)
-    const t2 = globalThis.setTimeout(() => {
-      setLog((prev) => [
-        ...prev,
-        {
-          id: nextId(),
-          kind: "sys",
-          text: "Try: coffee · sudo make sandwich · rm -rf / · motivation",
-        },
-      ])
-    }, 1000)
-    return () => {
-      globalThis.clearTimeout(t1)
-      globalThis.clearTimeout(t2)
-    }
-  }, [reduceMotion, resetToIntro, nextId])
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
-  }, [log])
-
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const raw = input.trim()
-    setInput("")
-    if (!raw) return
-
-    pushLines([{ kind: "cmd", text: `$ ${raw}` }])
-
-    const result = evalPortfolioCommand(raw, name)
-    if (result.clear) {
-      globalThis.setTimeout(() => resetToIntro(), 0)
-      return
-    }
-    pushLines(result.lines)
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 28, rotateY: -6 }}
-      animate={{ opacity: 1, x: 0, rotateY: 0 }}
-      transition={{ delay: 0.9, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-      role="region"
-      aria-label="Playful command terminal"
-      onClick={() => inputRef.current?.focus()}
-      className="glass-card absolute right-6 bottom-24 z-20 hidden w-[min(92vw,340px)] cursor-text overflow-hidden rounded-xl border border-primary/15 shadow-[0_0_40px_rgba(20,184,166,0.08)] lg:block xl:right-10 xl:bottom-28"
-    >
-      <div className="flex items-center gap-2 border-b border-white/8 bg-black/30 px-3 py-2">
-        <Terminal className="h-3.5 w-3.5 shrink-0 text-primary/80" />
-        <span className="font-mono text-[10px] tracking-wide text-muted-foreground">
-          zsh — portfolio (interactive)
-        </span>
-        <div className="ml-auto flex gap-1">
-          <span className="h-2 w-2 rounded-full bg-red-500/80" />
-          <span className="h-2 w-2 rounded-full bg-yellow-500/80" />
-          <span className="h-2 w-2 rounded-full bg-green-500/80" />
-        </div>
-      </div>
-
-      <div
-        ref={scrollRef}
-        className="max-h-[200px] space-y-1.5 overflow-y-auto overscroll-contain p-3 font-mono text-[11px] leading-relaxed sm:max-h-[220px] sm:text-xs"
-      >
-        {log.map((line) => (
-          <motion.div
-            key={line.id}
-            initial={reduceMotion ? false : { opacity: 0, x: -5 }}
-            animate={{ opacity: 1, x: 0 }}
-            className={
-              line.kind === "sys"
-                ? "text-zinc-500 italic"
-                : line.kind === "cmd"
-                  ? "text-zinc-400"
-                  : line.kind === "err"
-                    ? "text-red-400/90"
-                    : (line.className ?? "text-zinc-200")
-            }
-          >
-            <span className="break-words whitespace-pre-wrap">{line.text}</span>
-          </motion.div>
-        ))}
-      </div>
-
-      <form
-        onSubmit={onSubmit}
-        className="border-t border-white/8 bg-black/40 px-2 py-2"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <label htmlFor="hero-terminal-input" className="sr-only">
-          Terminal command
-        </label>
-        <div className="flex items-center gap-1.5 font-mono text-[11px] sm:text-xs">
-          <span className="shrink-0 text-primary">$</span>
-          <input
-            id="hero-terminal-input"
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="help"
-            className="min-w-0 flex-1 bg-transparent text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
-          />
-        </div>
-      </form>
-    </motion.div>
   )
 }
 
@@ -553,123 +149,92 @@ function HeroDisplayName({
   const { first, last } = parseNameParts(name)
   if (!first) return null
 
-  const nameEase: [number, number, number, number] = [0.19, 1, 0.22, 1]
-  const letterStagger = 0.036
-  const letterBaseDelay = 0.2
+  const spring = { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.85 }
+  const springSoft = { type: "spring" as const, stiffness: 90, damping: 20, mass: 0.9 }
 
-  const gradientNameClass =
-    "bg-gradient-to-r from-primary via-cyan-300/95 to-accent bg-[length:220%_auto] bg-clip-text text-transparent [text-shadow:0_0_48px_oklch(0.72_0.14_180_/_0.22)]"
-
-  const shimmerTransition = { duration: 6.5, repeat: Infinity, ease: "linear" as const }
+  const lastGradient =
+    "bg-gradient-to-br from-primary via-teal-200/90 to-accent bg-[length:180%_180%] bg-clip-text text-transparent"
 
   return (
-    <div className="relative flex flex-col items-center gap-1 sm:gap-2">
-      {!reduceMotion ? (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[min(28rem,120%)] w-[min(42rem,140%)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 blur-3xl"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ delay: 0.28, duration: 1.15, ease: nameEase }}
-          style={{
-            background:
-              "radial-gradient(ellipse at center, oklch(0.72 0.14 180 / 0.2), oklch(0.65 0.18 330 / 0.08) 45%, transparent 70%)",
-          }}
-        />
-      ) : null}
-
-      <motion.div
-        className="mb-1 font-mono text-[11px] font-medium tracking-[0.25em] text-primary/80 uppercase sm:text-xs"
-        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+    <div className="relative flex flex-col items-center gap-3 lg:items-start">
+      <motion.p
+        className="mb-0.5 font-sans text-[13px] font-normal tracking-[0.02em] text-zinc-500 italic sm:text-sm"
+        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.02, duration: 0.55, ease: nameEase }}
+        transition={reduceMotion ? { duration: 0 } : { ...springSoft, delay: 0.02 }}
       >
         Hi, I&apos;m
-      </motion.div>
+      </motion.p>
 
-      <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-baseline sm:gap-4 md:gap-5">
+      <div className="flex flex-col items-center gap-2 sm:gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-start lg:gap-x-4 lg:gap-y-1">
         {last ? (
           <>
             <motion.span
-              className="block text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
-              initial={reduceMotion ? false : { opacity: 0, y: 28, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ delay: 0.08, duration: 0.78, ease: nameEase }}
+              className="block text-5xl font-extralight tracking-[-0.03em] text-zinc-50 sm:text-6xl md:text-7xl lg:text-8xl"
+              initial={reduceMotion ? false : { opacity: 0, x: -36 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { ...spring, delay: 0.06 }}
             >
               {first}
             </motion.span>
 
             <motion.span
               aria-hidden
-              className="hidden font-light text-primary/40 select-none sm:inline sm:text-4xl md:text-5xl"
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.35 }}
+              className="hidden pb-2 font-light text-primary/35 select-none lg:inline lg:text-4xl xl:text-5xl"
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.18, duration: 0.55, ease: nameEase }}
+              transition={reduceMotion ? { duration: 0 } : { ...springSoft, delay: 0.14 }}
             >
-              ·
+              /
             </motion.span>
 
             <motion.span
-              className={`relative inline-block text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl ${gradientNameClass}`}
-              animate={reduceMotion ? {} : { backgroundPosition: ["0% center", "200% center"] }}
-              transition={shimmerTransition}
+              className={`block text-5xl font-semibold tracking-[-0.02em] sm:text-6xl md:text-7xl lg:text-8xl ${lastGradient}`}
+              initial={reduceMotion ? false : { opacity: 0, x: 40 }}
+              animate={
+                reduceMotion
+                  ? { opacity: 1, x: 0 }
+                  : {
+                      opacity: 1,
+                      x: 0,
+                      backgroundPosition: ["0% 40%", "100% 60%", "0% 40%"],
+                    }
+              }
+              transition={
+                reduceMotion
+                  ? { duration: 0 }
+                  : {
+                      opacity: { ...spring, delay: 0.12 },
+                      x: { ...spring, delay: 0.12 },
+                      backgroundPosition: { duration: 10, repeat: Infinity, ease: "linear" },
+                    }
+              }
             >
-              {!reduceMotion ? (
-                <span className="inline-flex flex-wrap justify-center gap-y-0.5">
-                  {last.split("").map((char, i) => (
-                    <motion.span
-                      key={`${i}-${char}`}
-                      className="inline-block"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        delay: letterBaseDelay + i * letterStagger,
-                        duration: 0.52,
-                        ease: nameEase,
-                      }}
-                    >
-                      {char === " " ? "\u00A0" : char}
-                    </motion.span>
-                  ))}
-                </span>
-              ) : (
-                last
-              )}
-              {!reduceMotion ? (
-                <motion.span
-                  aria-hidden
-                  className="absolute -bottom-1 left-1/2 h-px w-[min(100%,11rem)] max-w-full origin-center -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-primary/55 to-transparent"
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 1 }}
-                  transition={{
-                    delay: letterBaseDelay + last.length * letterStagger + 0.12,
-                    duration: 0.88,
-                    ease: nameEase,
-                  }}
-                />
-              ) : null}
+              {last}
             </motion.span>
           </>
         ) : (
           <motion.span
-            className={`block text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl ${gradientNameClass}`}
-            initial={reduceMotion ? false : { opacity: 0, y: 26, filter: "blur(10px)" }}
+            className={`block text-5xl font-semibold tracking-[-0.025em] sm:text-6xl md:text-7xl lg:text-8xl ${lastGradient}`}
+            initial={reduceMotion ? false : { opacity: 0, x: 32 }}
             animate={
               reduceMotion
-                ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                ? { opacity: 1, x: 0 }
                 : {
                     opacity: 1,
-                    y: 0,
-                    filter: "blur(0px)",
-                    backgroundPosition: ["0% center", "200% center"],
+                    x: 0,
+                    backgroundPosition: ["0% 40%", "100% 60%", "0% 40%"],
                   }
             }
-            transition={{
-              opacity: { delay: 0.08, duration: 0.75, ease: nameEase },
-              y: { delay: 0.08, duration: 0.75, ease: nameEase },
-              filter: { delay: 0.08, duration: 0.75, ease: nameEase },
-              backgroundPosition: { ...shimmerTransition, delay: 0.08 },
-            }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : {
+                    opacity: { ...spring, delay: 0.08 },
+                    x: { ...spring, delay: 0.08 },
+                    backgroundPosition: { duration: 10, repeat: Infinity, ease: "linear" },
+                  }
+            }
           >
             {first}
           </motion.span>
@@ -684,6 +249,7 @@ function HeroDisplayName({
 // ─────────────────────────────────────────────────────────────────────────────
 export function Hero({ data }: Readonly<HeroProps>) {
   const roleLines = useRoleLines(data)
+  const profileSummary = useMemo(() => buildHeroProfileSummary(data), [data])
   const reduceMotion = useReducedMotion()
 
   const mouseX = useMotionValue(0.5)
@@ -715,6 +281,8 @@ export function Hero({ data }: Readonly<HeroProps>) {
   const orbY = useTransform(py, (v) => (reduceMotion ? 0 : v * -14))
   const particleX = useTransform(px, (v) => (reduceMotion ? 0 : v * 12))
   const particleY = useTransform(py, (v) => (reduceMotion ? 0 : v * 8))
+  const meshSlowX = useTransform(px, (v) => (reduceMotion ? 0 : v * 8))
+  const meshSlowY = useTransform(py, (v) => (reduceMotion ? 0 : v * 5))
 
   return (
     <motion.section
@@ -722,9 +290,12 @@ export function Hero({ data }: Readonly<HeroProps>) {
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
     >
+      {/* Top rim light — subtle depth */}
+      <div className="hero-rim-light absolute inset-0 z-[1]" aria-hidden />
+
       {/* Animated mesh gradient (alive, low contrast) */}
       <motion.div
-        className="pointer-events-none absolute inset-0 opacity-40"
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.38]"
         animate={
           reduceMotion
             ? {}
@@ -734,6 +305,8 @@ export function Hero({ data }: Readonly<HeroProps>) {
         }
         transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
         style={{
+          x: meshSlowX,
+          y: meshSlowY,
           backgroundImage: `
             radial-gradient(ellipse 80% 60% at 20% 30%, oklch(0.75 0.15 180 / 0.22), transparent 55%),
             radial-gradient(ellipse 70% 50% at 80% 70%, oklch(0.72 0.2 330 / 0.18), transparent 50%),
@@ -744,7 +317,10 @@ export function Hero({ data }: Readonly<HeroProps>) {
       />
 
       {/* Dot grid + parallax */}
-      <motion.div className="pointer-events-none absolute inset-0" style={{ x: gridX, y: gridY }}>
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-0"
+        style={{ x: gridX, y: gridY }}
+      >
         <div
           className="absolute inset-0 opacity-[0.35]"
           style={{
@@ -754,18 +330,22 @@ export function Hero({ data }: Readonly<HeroProps>) {
         />
       </motion.div>
 
-      {/* Soft orbs — counter-parallax */}
-      <motion.div className="pointer-events-none absolute inset-0" style={{ x: orbX, y: orbY }}>
+      {/* Soft orbs — counter-parallax + mid-depth layer */}
+      <motion.div className="pointer-events-none absolute inset-0 z-0" style={{ x: orbX, y: orbY }}>
         <div className="animate-pulse-glow absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-primary/18 blur-3xl" />
         <div
           className="animate-pulse-glow absolute right-1/4 bottom-1/4 h-80 w-80 rounded-full bg-accent/16 blur-3xl"
           style={{ animationDelay: "1s" }}
         />
+        <div
+          className="animate-pulse-glow absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/8 blur-3xl"
+          style={{ animationDelay: "0.5s" }}
+        />
       </motion.div>
 
       {/* Subtle floating particles */}
       <motion.div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{ x: particleX, y: particleY }}
       >
         {PARTICLE_SEEDS.map((p) => (
@@ -796,100 +376,129 @@ export function Hero({ data }: Readonly<HeroProps>) {
         ))}
       </motion.div>
 
+      {/* Edge vignette — grounds the scene */}
+      <div className="hero-vignette absolute inset-0 z-[2]" aria-hidden />
+
       {/* Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
-        {data.available && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="glass-card mb-8 inline-flex items-center gap-2 rounded-full px-4 py-2"
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-28 text-center sm:px-5 lg:px-8 lg:pb-32">
+        <div className="grid gap-12 pb-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] lg:items-center lg:gap-14 lg:gap-y-10 lg:pb-6 lg:text-left">
+          <div className="relative lg:max-w-2xl lg:pr-2">
+            {data.available && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55 }}
+                className="glass-card mx-auto mb-7 inline-flex items-center gap-2 rounded-full border-white/10 px-4 py-2 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.45)] lg:mx-0"
+              >
+                <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+                <span className="text-sm text-muted-foreground">
+                  Available for new opportunities
+                </span>
+              </motion.div>
+            )}
+
+            <motion.h1
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.06, duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
+              className="mb-5 lg:mb-6"
+            >
+              <HeroDisplayName name={data.name} reduceMotion={!!reduceMotion} />
+            </motion.h1>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.58 }}
+              className="mb-6 flex min-h-[2.75rem] items-center justify-center gap-3 sm:min-h-[3rem] lg:justify-start"
+            >
+              <motion.span
+                className="h-px w-10 bg-gradient-to-r from-transparent to-border/80 sm:w-12"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ delay: 0.38, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              />
+              <div className="max-w-[min(100%,22rem)] min-w-0 sm:max-w-none lg:max-w-xl">
+                <DynamicRole lines={roleLines} />
+              </div>
+              <motion.span
+                className="h-px w-10 bg-gradient-to-l from-transparent to-border/80 sm:w-12"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={{ scaleX: 1, opacity: 1 }}
+                transition={{ delay: 0.38, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              />
+            </motion.div>
+
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto mb-9 max-w-xl text-base leading-[1.65] text-muted-foreground/95 sm:text-lg lg:mx-0 lg:mb-10 lg:max-w-lg"
+            >
+              {data.tagline}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 lg:justify-start"
+            >
+              <motion.div
+                whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              >
+                <Button
+                  size="lg"
+                  className="glow-teal bg-primary px-8 text-primary-foreground shadow-[0_12px_40px_-16px_oklch(0.55_0.14_180_/_0.45)] hover:bg-primary/90"
+                  onClick={() =>
+                    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  {data.ctaPrimaryLabel}
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
+                whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              >
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-border/80 bg-background/30 px-8 shadow-[0_8px_28px_-18px_rgba(0,0,0,0.35)] backdrop-blur-[2px] hover:border-accent hover:text-accent"
+                  onClick={() =>
+                    document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  {data.ctaSecondaryLabel}
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          <div
+            className={
+              reduceMotion
+                ? "flex justify-center lg:justify-end lg:pt-2"
+                : "animate-hero-panel-drift flex justify-center lg:justify-end lg:pt-2"
+            }
           >
-            <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-            <span className="text-sm text-muted-foreground">Available for new opportunities</span>
-          </motion.div>
-        )}
-
-        <motion.h1
-          initial={{ opacity: 0, y: 22 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06, duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-6"
-        >
-          <HeroDisplayName name={data.name} reduceMotion={!!reduceMotion} />
-        </motion.h1>
-
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.18, duration: 0.55 }}
-          className="mb-6 flex items-center justify-center gap-3"
-        >
-          <motion.span
-            className="h-px w-12 bg-gradient-to-r from-transparent to-border"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.35, duration: 0.5 }}
-          />
-          <DynamicRole lines={roleLines} />
-          <motion.span
-            className="h-px w-12 bg-gradient-to-l from-transparent to-border"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ delay: 0.35, duration: 0.5 }}
-          />
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.28, duration: 0.55 }}
-          className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl"
-        >
-          {data.tagline}
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.38, duration: 0.55 }}
-          className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-        >
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              size="lg"
-              className="glow-teal bg-primary px-8 text-primary-foreground hover:bg-primary/90"
-              onClick={() =>
-                document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              <Sparkles className="mr-2 h-5 w-5" />
-              {data.ctaPrimaryLabel}
-            </Button>
-          </motion.div>
-          <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-border px-8 hover:border-accent hover:text-accent"
-              onClick={() =>
-                document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
-              }
-            >
-              {data.ctaSecondaryLabel}
-            </Button>
-          </motion.div>
-        </motion.div>
+            <HeroProfileJsonPanel summary={profileSummary} />
+          </div>
+        </div>
       </div>
 
       <motion.div
         className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
-        animate={reduceMotion ? {} : { y: [0, -6, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        animate={reduceMotion ? {} : { y: [0, -5, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
       >
         <a
           href="#about"
-          className="group glass-card flex items-center gap-2.5 rounded-full px-5 py-2.5 text-sm text-muted-foreground transition-all hover:border-primary/50 hover:text-primary"
+          className="group glass-card flex items-center gap-2.5 rounded-full border-white/10 px-5 py-2.5 text-sm text-muted-foreground shadow-[0_10px_36px_-14px_rgba(0,0,0,0.4)] transition-all hover:border-primary/45 hover:text-primary"
         >
           <span className="font-medium tracking-wide">Scroll to explore</span>
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 transition-colors group-hover:bg-primary/40">
@@ -897,8 +506,6 @@ export function Hero({ data }: Readonly<HeroProps>) {
           </span>
         </a>
       </motion.div>
-
-      <HeroTerminal name={data.name} />
     </motion.section>
   )
 }
