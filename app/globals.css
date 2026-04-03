@@ -246,23 +246,3 @@
     transparent 55%
   );
 }
-
-@keyframes hero-panel-drift {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-.animate-hero-panel-drift {
-  animation: hero-panel-drift 14s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .animate-hero-panel-drift {
-    animation: none;
-  }
-}
