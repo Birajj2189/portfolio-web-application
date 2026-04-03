@@ -20,5 +20,8 @@ declare namespace NodeJS {
     // Server-side only (Next rewrites — see next.config.mjs)
     readonly AUTH_SERVICE_URL?: string
     readonly API_SECRET_KEY?: string
+
+    // Optional: NewsAPI for /api/tech-news (Dev.to + HN work without a key)
+    readonly NEWS_API_KEY?: string
   }
 }

@@ -1,6 +1,8 @@
 "use client"
 
 import { Heart, Code2 } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
+import { sectionFooterReveal, sectionViewport } from "@/lib/section-motion"
 import type { FooterData } from "@/types/portfolio"
 
 interface FooterProps {
@@ -8,10 +10,18 @@ interface FooterProps {
 }
 
 export function Footer({ data }: FooterProps) {
+  const reduce = useReducedMotion()
+
   return (
     <footer className="border-t border-border px-4 py-8">
       <div className="container mx-auto max-w-6xl">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <motion.div
+          variants={reduce ? undefined : sectionFooterReveal}
+          initial={reduce ? false : "hidden"}
+          whileInView={reduce ? undefined : "visible"}
+          viewport={sectionViewport}
+          className="flex flex-col items-center justify-between gap-4 sm:flex-row"
+        >
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Code2 className="h-4 w-4" />
             <span>Built with</span>
@@ -24,7 +34,7 @@ export function Footer({ data }: FooterProps) {
               &copy; {new Date().getFullYear()} {data.copyrightName}. All rights reserved.
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   )

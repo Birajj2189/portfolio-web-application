@@ -1,7 +1,16 @@
 "use client"
 
 import { Code2 } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
 import { getIcon } from "@/lib/icon-map"
+import {
+  SECTION_EASE,
+  sectionFlow,
+  sectionFlowItem,
+  sectionList,
+  sectionListItem,
+  sectionViewport,
+} from "@/lib/section-motion"
 import type { AboutData } from "@/types/portfolio"
 
 interface AboutProps {
@@ -9,8 +18,8 @@ interface AboutProps {
 }
 
 export function About({ data }: AboutProps) {
-  // bio is Strapi Blocks format — flatten to plain text paragraphs for now.
-  // Replace with @strapi/blocks-react-renderer if rich formatting is needed.
+  const reduce = useReducedMotion()
+
   const bioParagraphs: string[] = (data.bio ?? [])
     .map((block: unknown) => {
       const b = block as { type: string; children?: { text: string }[] }
@@ -22,61 +31,94 @@ export function About({ data }: AboutProps) {
     .filter(Boolean)
 
   return (
-    <section id="about" className="px-4 py-24">
+    <section id="about" className="scroll-mt-24 px-4 py-24">
       <div className="container mx-auto max-w-6xl">
-        {/* Section header */}
-        <div className="mb-12 flex items-center gap-4">
-          <Code2 className="h-6 w-6 text-primary" />
-          <h2 className="text-3xl font-bold">About Me</h2>
-          <div className="h-px flex-1 bg-border" />
-        </div>
+        <motion.div
+          className="grid gap-12 lg:grid-cols-2"
+          variants={reduce ? undefined : sectionFlow}
+          initial={reduce ? false : "hidden"}
+          whileInView={reduce ? undefined : "visible"}
+          viewport={sectionViewport}
+        >
+          <motion.div variants={reduce ? undefined : sectionFlowItem} className="lg:col-span-2">
+            <div className="mb-12 flex items-center gap-4">
+              <Code2 className="h-6 w-6 text-primary" />
+              <h2 className="text-3xl font-bold tracking-tight">About Me</h2>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+          </motion.div>
 
-        <div className="grid gap-12 lg:grid-cols-2">
-          {/* Story */}
-          <div className="space-y-6">
-            {bioParagraphs.length > 0 ? (
-              bioParagraphs.map((para, i) => (
-                <p key={i} className="text-lg leading-relaxed text-muted-foreground">
-                  {para}
-                </p>
-              ))
-            ) : (
-              <p className="text-lg leading-relaxed text-muted-foreground">
-                Passionate software engineer crafting elegant digital experiences.
-              </p>
-            )}
+          <motion.div variants={reduce ? undefined : sectionFlowItem} className="space-y-6">
+            <motion.div variants={reduce ? undefined : sectionList} className="space-y-6">
+              {bioParagraphs.length > 0 ? (
+                bioParagraphs.map((para, i) => (
+                  <motion.p
+                    key={i}
+                    variants={reduce ? undefined : sectionListItem}
+                    className="text-lg leading-relaxed text-muted-foreground"
+                  >
+                    {para}
+                  </motion.p>
+                ))
+              ) : (
+                <motion.p
+                  variants={reduce ? undefined : sectionListItem}
+                  className="text-lg leading-relaxed text-muted-foreground"
+                >
+                  Passionate software engineer crafting elegant digital experiences.
+                </motion.p>
+              )}
+            </motion.div>
 
-            {/* Tech badges */}
-            <div className="flex flex-wrap gap-2 pt-4">
+            <motion.div
+              variants={reduce ? undefined : sectionList}
+              className="flex flex-wrap gap-2 pt-4"
+            >
               {data.techStack?.map((tech) => (
-                <span
+                <motion.span
                   key={tech}
+                  variants={reduce ? undefined : sectionListItem}
                   className="glass-card cursor-default rounded-full px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
                 >
                   {tech}
-                </span>
+                </motion.span>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Skill cards */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {data.skills?.map((skill) => {
+          <motion.div
+            variants={reduce ? undefined : sectionFlowItem}
+            className="grid grid-cols-2 gap-4 sm:grid-cols-3"
+          >
+            {data.skills?.map((skill, index) => {
               const Icon = getIcon(skill.icon)
               return (
-                <div
+                <motion.div
                   key={skill.id}
-                  className="glass-card group flex flex-col items-center gap-3 rounded-xl p-6 transition-all hover:-translate-y-1 hover:border-primary/50"
+                  initial={reduce ? false : { opacity: 0, y: 22 }}
+                  whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                  viewport={sectionViewport}
+                  transition={{
+                    delay: reduce ? 0 : index * 0.07,
+                    duration: 0.7,
+                    ease: SECTION_EASE,
+                  }}
+                  whileHover={
+                    reduce
+                      ? undefined
+                      : { y: -4, transition: { type: "spring", stiffness: 400, damping: 28 } }
+                  }
+                  className="glass-card group flex flex-col items-center gap-3 rounded-xl p-6 transition-colors hover:border-primary/50"
                 >
                   <Icon
                     className={`h-10 w-10 ${skill.color} transition-transform group-hover:scale-110`}
                   />
                   <span className="text-sm font-medium text-foreground">{skill.name}</span>
-                </div>
+                </motion.div>
               )
             })}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   )

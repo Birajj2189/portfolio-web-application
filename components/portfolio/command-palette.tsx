@@ -50,7 +50,9 @@ const commands = [
   {
     name: "Playground",
     icon: Beaker,
-    action: () => document.getElementById("playground")?.scrollIntoView({ behavior: "smooth" }),
+    action: () => {
+      globalThis.location.href = "/playground"
+    },
     shortcut: "L",
   },
   {
