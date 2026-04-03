@@ -537,6 +537,149 @@ function HeroTerminal({ name }: Readonly<{ name: string }>) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Hero headline — first / last name, theme-aligned motion
+// ─────────────────────────────────────────────────────────────────────────────
+function parseNameParts(full: string): { first: string; last: string | null } {
+  const parts = full.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return { first: "", last: null }
+  if (parts.length === 1) return { first: parts[0]!, last: null }
+  return { first: parts[0]!, last: parts.slice(1).join(" ") }
+}
+
+function HeroDisplayName({
+  name,
+  reduceMotion,
+}: Readonly<{ name: string; reduceMotion: boolean }>) {
+  const { first, last } = parseNameParts(name)
+  if (!first) return null
+
+  const nameEase: [number, number, number, number] = [0.19, 1, 0.22, 1]
+  const letterStagger = 0.036
+  const letterBaseDelay = 0.2
+
+  const gradientNameClass =
+    "bg-gradient-to-r from-primary via-cyan-300/95 to-accent bg-[length:220%_auto] bg-clip-text text-transparent [text-shadow:0_0_48px_oklch(0.72_0.14_180_/_0.22)]"
+
+  const shimmerTransition = { duration: 6.5, repeat: Infinity, ease: "linear" as const }
+
+  return (
+    <div className="relative flex flex-col items-center gap-1 sm:gap-2">
+      {!reduceMotion ? (
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[min(28rem,120%)] w-[min(42rem,140%)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 blur-3xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ delay: 0.28, duration: 1.15, ease: nameEase }}
+          style={{
+            background:
+              "radial-gradient(ellipse at center, oklch(0.72 0.14 180 / 0.2), oklch(0.65 0.18 330 / 0.08) 45%, transparent 70%)",
+          }}
+        />
+      ) : null}
+
+      <motion.div
+        className="mb-1 font-mono text-[11px] font-medium tracking-[0.25em] text-primary/80 uppercase sm:text-xs"
+        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.02, duration: 0.55, ease: nameEase }}
+      >
+        Hi, I&apos;m
+      </motion.div>
+
+      <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-baseline sm:gap-4 md:gap-5">
+        {last ? (
+          <>
+            <motion.span
+              className="block text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl"
+              initial={reduceMotion ? false : { opacity: 0, y: 28, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ delay: 0.08, duration: 0.78, ease: nameEase }}
+            >
+              {first}
+            </motion.span>
+
+            <motion.span
+              aria-hidden
+              className="hidden font-light text-primary/40 select-none sm:inline sm:text-4xl md:text-5xl"
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.35 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.18, duration: 0.55, ease: nameEase }}
+            >
+              ·
+            </motion.span>
+
+            <motion.span
+              className={`relative inline-block text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl ${gradientNameClass}`}
+              animate={reduceMotion ? {} : { backgroundPosition: ["0% center", "200% center"] }}
+              transition={shimmerTransition}
+            >
+              {!reduceMotion ? (
+                <span className="inline-flex flex-wrap justify-center gap-y-0.5">
+                  {last.split("").map((char, i) => (
+                    <motion.span
+                      key={`${i}-${char}`}
+                      className="inline-block"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: letterBaseDelay + i * letterStagger,
+                        duration: 0.52,
+                        ease: nameEase,
+                      }}
+                    >
+                      {char === " " ? "\u00A0" : char}
+                    </motion.span>
+                  ))}
+                </span>
+              ) : (
+                last
+              )}
+              {!reduceMotion ? (
+                <motion.span
+                  aria-hidden
+                  className="absolute -bottom-1 left-1/2 h-px w-[min(100%,11rem)] max-w-full origin-center -translate-x-1/2 rounded-full bg-gradient-to-r from-transparent via-primary/55 to-transparent"
+                  initial={{ scaleX: 0, opacity: 0 }}
+                  animate={{ scaleX: 1, opacity: 1 }}
+                  transition={{
+                    delay: letterBaseDelay + last.length * letterStagger + 0.12,
+                    duration: 0.88,
+                    ease: nameEase,
+                  }}
+                />
+              ) : null}
+            </motion.span>
+          </>
+        ) : (
+          <motion.span
+            className={`block text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl ${gradientNameClass}`}
+            initial={reduceMotion ? false : { opacity: 0, y: 26, filter: "blur(10px)" }}
+            animate={
+              reduceMotion
+                ? { opacity: 1, y: 0, filter: "blur(0px)" }
+                : {
+                    opacity: 1,
+                    y: 0,
+                    filter: "blur(0px)",
+                    backgroundPosition: ["0% center", "200% center"],
+                  }
+            }
+            transition={{
+              opacity: { delay: 0.08, duration: 0.75, ease: nameEase },
+              y: { delay: 0.08, duration: 0.75, ease: nameEase },
+              filter: { delay: 0.08, duration: 0.75, ease: nameEase },
+              backgroundPosition: { ...shimmerTransition, delay: 0.08 },
+            }}
+          >
+            {first}
+          </motion.span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Hero
 // ─────────────────────────────────────────────────────────────────────────────
 export function Hero({ data }: Readonly<HeroProps>) {
@@ -670,17 +813,10 @@ export function Hero({ data }: Readonly<HeroProps>) {
         <motion.h1
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-6 text-4xl font-bold sm:text-5xl md:text-7xl"
+          transition={{ delay: 0.06, duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-6"
         >
-          <span className="text-foreground">Hi, I&apos;m </span>
-          <motion.span
-            className="inline-block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent"
-            animate={reduceMotion ? {} : { backgroundPosition: ["0% center", "200% center"] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-          >
-            {data.name}
-          </motion.span>
+          <HeroDisplayName name={data.name} reduceMotion={!!reduceMotion} />
         </motion.h1>
 
         <motion.div

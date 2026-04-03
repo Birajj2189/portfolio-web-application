@@ -146,7 +146,7 @@ export function Playground() {
   return (
     <section
       id="playground"
-      className="relative scroll-mt-24 overflow-hidden px-4 pt-16 pb-24 md:pt-20 md:pb-28"
+      className="relative flex min-h-screen scroll-mt-24 flex-col justify-center overflow-hidden px-4 pt-16 pb-24 md:pt-20 md:pb-28"
     >
       <div className="dot-pattern pointer-events-none absolute inset-0 opacity-[0.35]" />
       <div className="pointer-events-none absolute -top-32 left-1/3 h-[360px] w-[360px] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />

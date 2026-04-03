@@ -31,7 +31,10 @@ export function About({ data }: AboutProps) {
     .filter(Boolean)
 
   return (
-    <section id="about" className="scroll-mt-24 px-4 py-24">
+    <section
+      id="about"
+      className="flex min-h-screen scroll-mt-24 flex-col justify-center px-4 py-24 md:py-28"
+    >
       <div className="container mx-auto max-w-6xl">
         <motion.div
           className="grid gap-12 lg:grid-cols-2"

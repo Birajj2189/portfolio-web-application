@@ -33,7 +33,10 @@ export function Projects({ data }: ProjectsProps) {
   const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
   return (
-    <section id="projects" className="dot-pattern scroll-mt-24 px-4 py-24">
+    <section
+      id="projects"
+      className="dot-pattern flex min-h-screen scroll-mt-24 flex-col justify-center px-4 py-24 md:py-28"
+    >
       <div className="container mx-auto max-w-6xl">
         <motion.div
           variants={reduce ? undefined : sectionFlow}

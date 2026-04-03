@@ -15,7 +15,10 @@ export function GalleryTeaser() {
   const reduce = useReducedMotion()
 
   return (
-    <section id="gallery" className="scroll-mt-24 px-4 py-24">
+    <section
+      id="gallery"
+      className="flex min-h-screen scroll-mt-24 flex-col justify-center px-4 py-24 md:py-28"
+    >
       <div className="container mx-auto max-w-6xl">
         <motion.div
           variants={reduce ? undefined : sectionFlow}
