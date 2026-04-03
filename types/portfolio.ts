@@ -38,6 +38,8 @@ export interface AboutData {
   bio: unknown[] // Strapi Blocks (rich text) — rendered via blocks renderer
   techStack: string[]
   skills: SkillItem[]
+  /** Spline scene URL (`.splinecode`). Falls back to `NEXT_PUBLIC_SPLINE_SCENE_URL` or bundled default. */
+  splineSceneUrl?: string | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
