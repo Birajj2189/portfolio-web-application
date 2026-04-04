@@ -16,6 +16,7 @@ import { Footer } from "@/components/portfolio/footer"
 import { AuthModal } from "@/components/portfolio/auth-modal"
 import { GreetingBar } from "@/components/portfolio/greeting-bar"
 import { GalleryTeaser } from "@/components/portfolio/gallery-teaser"
+import { HillsOutro } from "@/components/portfolio/hills-outro"
 import { LoadingScreen, ErrorScreen } from "@/components/portfolio/loading-screen"
 import { useUIStore } from "@/store/ui.store"
 import { useAuthStore } from "@/store/auth.store"
@@ -98,6 +99,7 @@ export default function Portfolio() {
       <GalleryTeaser />
       <Resume data={data.resume} />
       <Contact data={data.contact} />
+      <HillsOutro hero={data.hero} />
       <Footer data={data.footer} />
 
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />

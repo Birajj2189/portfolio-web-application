@@ -24,6 +24,10 @@ export interface HeroData {
   ctaSecondaryLabel: string
   /** Optional poster hero portrait (path under `public/` or absolute URL). */
   heroPortraitUrl?: string | null
+  /** Closing “thought” section (before footer). Falls back to tagline + defaults if omitted. */
+  outroThought?: string | null
+  outroStatement?: string | null
+  outroSupporting?: string | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
