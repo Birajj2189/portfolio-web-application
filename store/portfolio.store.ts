@@ -9,7 +9,8 @@ interface PortfolioState {
   data: PortfolioData | null
   status: FetchStatus
   errorMessage: string | null
-  fetch: () => Promise<void>
+  /** Use `{ force: true }` after a timeout or stuck request so a new fetch can start. */
+  fetch: (opts?: { force?: boolean }) => Promise<void>
 }
 
 export const usePortfolioStore = create<PortfolioState>()(
@@ -19,8 +20,8 @@ export const usePortfolioStore = create<PortfolioState>()(
       status: "idle",
       errorMessage: null,
 
-      fetch: async () => {
-        if (get().status === "loading") return
+      fetch: async (opts) => {
+        if (get().status === "loading" && !opts?.force) return
         set({ status: "loading", errorMessage: null }, false, "portfolio/fetch/start")
         try {
           const data = await fetchPortfolio()

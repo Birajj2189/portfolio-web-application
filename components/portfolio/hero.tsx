@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { useMemo } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CursorDrivenParticleTypography } from "@/components/ui/cursor-driven-particles-typography"
@@ -34,46 +34,6 @@ function useRoleHeadline(data: HeroData): string {
     const parts = data.role.split("|").map((s) => s.trim())
     return parts.find(Boolean) ?? data.role
   }, [data.role, data.roleVariants])
-}
-
-const LOADER_LABEL = "Loading"
-const LOADER_CHAR_MS = 45
-/** Pause on the full word before handoff to exit animation + page */
-const LOADER_DWELL_MS = 320
-
-function LoaderTyping({ onComplete }: Readonly<{ onComplete: () => void }>) {
-  const [text, setText] = useState("")
-
-  useEffect(() => {
-    let i = 0
-    let dwellId: ReturnType<typeof globalThis.setTimeout> | undefined
-    let cancelled = false
-
-    const id = globalThis.setInterval(() => {
-      if (cancelled) return
-      i += 1
-      setText(LOADER_LABEL.slice(0, i))
-      if (i >= LOADER_LABEL.length) {
-        globalThis.clearInterval(id)
-        dwellId = globalThis.setTimeout(() => {
-          if (!cancelled) onComplete()
-        }, LOADER_DWELL_MS)
-      }
-    }, LOADER_CHAR_MS)
-
-    return () => {
-      cancelled = true
-      globalThis.clearInterval(id)
-      if (dwellId !== undefined) globalThis.clearTimeout(dwellId)
-    }
-  }, [onComplete])
-
-  return (
-    <p className="font-mono text-xs tracking-[0.35em] text-muted-foreground">
-      {text}
-      <span className="ml-1 inline-block w-px animate-pulse bg-primary" aria-hidden />
-    </p>
-  )
 }
 
 function PosterBottomName({
@@ -156,13 +116,6 @@ export function Hero({ data }: Readonly<HeroProps>) {
   const reduceMotion = useReducedMotion()
   const reduce = !!reduceMotion
 
-  const [showLoader, setShowLoader] = useState(!reduce)
-  const [revealContent, setRevealContent] = useState(reduce)
-
-  const handleLoaderComplete = useCallback(() => {
-    setShowLoader(false)
-  }, [])
-
   const primaryLabel = data.ctaPrimaryLabel?.trim() || PRIMARY_CTA
   const secondaryLabel = data.ctaSecondaryLabel?.trim() || SECONDARY_CTA
   const roleHeadline = useRoleHeadline(data)
@@ -183,19 +136,6 @@ export function Hero({ data }: Readonly<HeroProps>) {
 
   return (
     <section id="hero" className="relative overflow-hidden bg-background">
-      <AnimatePresence onExitComplete={() => setRevealContent(true)}>
-        {showLoader && !reduce ? (
-          <motion.div
-            key="hero-loader"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE_IN_OUT }}
-          >
-            <LoaderTyping onComplete={handleLoaderComplete} />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
       <TubesBackground className="min-h-screen" enabled={!reduce} enableClickInteraction={!reduce}>
         <div className="hero-rim-light pointer-events-none absolute inset-0 z-[1]" aria-hidden />
         <div
@@ -204,107 +144,103 @@ export function Hero({ data }: Readonly<HeroProps>) {
         />
 
         <div className="pointer-events-none relative z-[3] min-h-dvh">
-          {revealContent ? (
-            <div className="pointer-events-auto flex min-h-dvh flex-col">
-              {/* Upper poster row: pinned to bottom edge of this region, directly above the name */}
-              <div className="flex min-h-0 flex-1 flex-col">
+          <div className="pointer-events-auto flex min-h-dvh flex-col">
+            {/* Upper poster row: pinned to bottom edge of this region, directly above the name */}
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div
+                className={cn(
+                  "mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-end",
+                  "px-5 pt-24 pb-5 sm:px-8 sm:pt-28 sm:pb-6 md:pb-7 lg:px-10 lg:pb-8"
+                )}
+              >
                 <div
                   className={cn(
-                    "mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-end",
-                    "px-5 pt-24 pb-5 sm:px-8 sm:pt-28 sm:pb-6 md:pb-7 lg:px-10 lg:pb-8"
+                    "grid w-full grid-cols-1 gap-10 sm:gap-8",
+                    "md:grid-cols-2 md:items-end md:gap-x-10 lg:gap-x-16 xl:gap-x-24"
                   )}
                 >
-                  <div
-                    className={cn(
-                      "grid w-full grid-cols-1 gap-10 sm:gap-8",
-                      "md:grid-cols-2 md:items-end md:gap-x-10 lg:gap-x-16 xl:gap-x-24"
-                    )}
+                  {/* Left — status + role (bottom-aligned with right column on md+) */}
+                  <motion.div
+                    className="flex max-w-xl flex-col gap-4 md:max-w-md md:justify-self-start"
+                    {...slide(0.06, -28)}
                   >
-                    {/* Left — status + role (bottom-aligned with right column on md+) */}
-                    <motion.div
-                      className="flex max-w-xl flex-col gap-4 md:max-w-md md:justify-self-start"
-                      {...slide(0.06, -28)}
-                    >
-                      {data.available ? (
-                        <div className="glass-card inline-flex w-fit items-center gap-2 rounded-full border-white/10 px-3 py-1.5">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_10px_oklch(0.75_0.15_180_/_0.7)]" />
-                          <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-                            Available for work
-                          </span>
-                        </div>
-                      ) : null}
-                      <h2
-                        className={cn(
-                          "text-left font-poster text-2xl leading-[1.15] font-bold tracking-tight text-foreground sm:text-3xl md:text-[1.75rem] lg:text-3xl xl:text-[2rem]"
-                        )}
-                      >
-                        {roleHeadline}
-                      </h2>
-                    </motion.div>
-
-                    {/* Right — bio + CTAs: on small screens tuck to the right; on md+ bottom + right aligned */}
-                    <motion.div
+                    {data.available ? (
+                      <div className="glass-card inline-flex w-fit items-center gap-2 rounded-full border-white/10 px-3 py-1.5">
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_10px_oklch(0.75_0.15_180_/_0.7)]" />
+                        <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                          Available for work
+                        </span>
+                      </div>
+                    ) : null}
+                    <h2
                       className={cn(
-                        "flex max-w-xl flex-col gap-6 md:max-w-md",
-                        "max-md:ml-auto max-md:w-full max-md:max-w-lg max-md:items-end max-md:text-right",
-                        "md:items-end md:justify-self-end md:text-right"
+                        "text-left font-poster text-2xl leading-[1.15] font-bold tracking-tight text-foreground sm:text-3xl md:text-[1.75rem] lg:text-3xl xl:text-[2rem]"
                       )}
-                      {...slide(0.14, 28)}
                     >
-                      <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
-                        {tagline}
-                      </p>
-                      <div className="flex flex-col gap-4 max-md:items-end md:items-end">
-                        <motion.div
-                          whileHover={reduce ? undefined : { scale: 1.02 }}
-                          whileTap={reduce ? undefined : { scale: 0.98 }}
-                        >
-                          <Button
-                            size="lg"
-                            className={cn(
-                              "h-12 gap-3 rounded-full border-0 bg-primary pr-7 pl-2 text-primary-foreground",
-                              "shadow-[0_16px_48px_-20px_oklch(0.55_0.14_180_/_0.55)]",
-                              "hover:bg-primary/90"
-                            )}
-                            onClick={() =>
-                              document
-                                .getElementById("projects")
-                                ?.scrollIntoView({ behavior: "smooth" })
-                            }
-                          >
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15">
-                              <ArrowRight className="h-4 w-4" />
-                            </span>
-                            {primaryLabel}
-                          </Button>
-                        </motion.div>
-                        <button
-                          type="button"
-                          className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary max-md:text-right"
+                      {roleHeadline}
+                    </h2>
+                  </motion.div>
+
+                  {/* Right — bio + CTAs: on small screens tuck to the right; on md+ bottom + right aligned */}
+                  <motion.div
+                    className={cn(
+                      "flex max-w-xl flex-col gap-6 md:max-w-md",
+                      "max-md:ml-auto max-md:w-full max-md:max-w-lg max-md:items-end max-md:text-right",
+                      "md:items-end md:justify-self-end md:text-right"
+                    )}
+                    {...slide(0.14, 28)}
+                  >
+                    <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                      {tagline}
+                    </p>
+                    <div className="flex flex-col gap-4 max-md:items-end md:items-end">
+                      <motion.div
+                        whileHover={reduce ? undefined : { scale: 1.02 }}
+                        whileTap={reduce ? undefined : { scale: 0.98 }}
+                      >
+                        <Button
+                          size="lg"
+                          className={cn(
+                            "h-12 gap-3 rounded-full border-0 bg-primary pr-7 pl-2 text-primary-foreground",
+                            "shadow-[0_16px_48px_-20px_oklch(0.55_0.14_180_/_0.55)]",
+                            "hover:bg-primary/90"
+                          )}
                           onClick={() =>
-                            document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
+                            document
+                              .getElementById("projects")
+                              ?.scrollIntoView({ behavior: "smooth" })
                           }
                         >
-                          {secondaryLabel} →
-                        </button>
-                      </div>
-                    </motion.div>
-                  </div>
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15">
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                          {primaryLabel}
+                        </Button>
+                      </motion.div>
+                      <button
+                        type="button"
+                        className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary max-md:text-right"
+                        onClick={() =>
+                          document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
+                        }
+                      >
+                        {secondaryLabel} →
+                      </button>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
-
-              {/* Bottom — single-line name */}
-              <div className="pointer-events-auto shrink-0 border-t border-white/[0.06] bg-background/40 px-3 py-4 backdrop-blur-[2px] sm:px-6 sm:py-5">
-                <PosterBottomName
-                  naturalName={naturalName}
-                  displayUpper={displayUpper}
-                  reduceMotion={reduce}
-                />
-              </div>
             </div>
-          ) : (
-            <div className="min-h-dvh" aria-hidden />
-          )}
+
+            {/* Bottom — single-line name */}
+            <div className="pointer-events-auto shrink-0 border-t border-white/[0.06] bg-background/40 px-3 py-4 backdrop-blur-[2px] sm:px-6 sm:py-5">
+              <PosterBottomName
+                naturalName={naturalName}
+                displayUpper={displayUpper}
+                reduceMotion={reduce}
+              />
+            </div>
+          </div>
         </div>
       </TubesBackground>
     </section>

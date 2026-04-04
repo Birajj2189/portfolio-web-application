@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 import { Navbar } from "@/components/portfolio/navbar"
 import { Hero } from "@/components/portfolio/hero"
 import { About } from "@/components/portfolio/about"
@@ -19,22 +21,46 @@ import { useUIStore } from "@/store/ui.store"
 import { useAuthStore } from "@/store/auth.store"
 import { usePortfolioStore } from "@/store/portfolio.store"
 
+const FETCH_TIMEOUT_MS = 20_000
+
+const MAIN_ENTER = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.55, ease: [0.42, 0, 0.58, 1] as const },
+}
+
 export default function Portfolio() {
+  const router = useRouter()
+  const [introComplete, setIntroComplete] = useState(false)
   const { isCommandPaletteOpen, openCommandPalette, closeCommandPalette } = useUIStore()
   const { rehydrate } = useAuthStore()
   const { data, status, errorMessage, fetch: fetchPortfolio } = usePortfolioStore()
 
-  // Validate persisted auth session on mount
+  const handleIntroComplete = useCallback(() => {
+    setIntroComplete(true)
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    setIntroComplete(false)
+    void fetchPortfolio({ force: true })
+  }, [fetchPortfolio])
+
   useEffect(() => {
     rehydrate()
   }, [rehydrate])
 
-  // Fetch portfolio content on mount
   useEffect(() => {
-    fetchPortfolio()
+    void fetchPortfolio()
   }, [fetchPortfolio])
 
-  // Global keyboard shortcut for command palette
+  useEffect(() => {
+    if (status !== "idle" && status !== "loading") return
+    const id = globalThis.setTimeout(() => {
+      router.replace("/error?reason=timeout")
+    }, FETCH_TIMEOUT_MS)
+    return () => globalThis.clearTimeout(id)
+  }, [status, router])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -42,27 +68,27 @@ export default function Portfolio() {
         openCommandPalette()
       }
     }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
+    globalThis.window.addEventListener("keydown", handleKeyDown)
+    return () => globalThis.window.removeEventListener("keydown", handleKeyDown)
   }, [openCommandPalette])
 
-  // Show loading screen while fetching
-  if (status === "idle" || status === "loading") {
-    return <LoadingScreen />
-  }
-
-  // Show error screen if fetch failed
-  if (status === "error" || !data) {
+  if (status === "error") {
     return (
       <ErrorScreen
         message={errorMessage ?? "Could not load portfolio data. Is the backend running?"}
-        onRetry={fetchPortfolio}
+        onRetry={handleRetry}
       />
     )
   }
 
+  const readyToShow = status === "success" && data != null && introComplete
+
+  if (!readyToShow) {
+    return <LoadingScreen onSequenceComplete={handleIntroComplete} />
+  }
+
   return (
-    <main className="min-h-screen bg-background">
+    <motion.main className="min-h-screen bg-background" {...MAIN_ENTER}>
       <Navbar onOpenCommandPalette={openCommandPalette} />
       <Hero data={data.hero} />
       <About data={data.about} />
@@ -74,14 +100,9 @@ export default function Portfolio() {
       <Contact data={data.contact} />
       <Footer data={data.footer} />
 
-      {/* Command palette */}
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={closeCommandPalette} />
-
-      {/* Auth modal — login / signup */}
       <AuthModal />
-
-      {/* Sticky greeting shown when logged in */}
       <GreetingBar />
-    </main>
+    </motion.main>
   )
 }
