@@ -126,7 +126,11 @@ function SnippetActions({ entry }: Readonly<{ entry: PlaygroundShelfEntry }>) {
   )
 }
 
-function ShelfCard({ entry, index }: Readonly<{ entry: PlaygroundShelfEntry; index: number }>) {
+function ShelfCard({
+  entry,
+  index,
+  coverPriority = false,
+}: Readonly<{ entry: PlaygroundShelfEntry; index: number; coverPriority?: boolean }>) {
   const meta = KIND_META[entry.kind]
   const Icon = meta.Icon
   const reduce = useReducedMotion()
@@ -172,6 +176,7 @@ function ShelfCard({ entry, index }: Readonly<{ entry: PlaygroundShelfEntry; ind
               src={strapiImageUrl(coverSrc)}
               alt={entry.cover?.alternativeText ?? entry.title}
               fill
+              priority={coverPriority}
               className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
               sizes="(max-width: 768px) 100vw, 400px"
             />
@@ -253,7 +258,13 @@ function SectionBlock({
   kind,
   items,
   filter,
-}: Readonly<{ kind: PlaygroundKind; items: PlaygroundShelfEntry[]; filter: Filter }>) {
+  eagerCoverKey,
+}: Readonly<{
+  kind: PlaygroundKind
+  items: PlaygroundShelfEntry[]
+  filter: Filter
+  eagerCoverKey: string | null
+}>) {
   const reduce = useReducedMotion()
   if (filter !== "all" && filter !== kind) return null
   if (items.length === 0) return null
@@ -295,7 +306,11 @@ function SectionBlock({
       >
         {items.map((entry, i) => (
           <li key={`${kind}-${entry.id}`}>
-            <ShelfCard entry={entry} index={i} />
+            <ShelfCard
+              entry={entry}
+              index={i}
+              coverPriority={eagerCoverKey === `${kind}:${entry.id}`}
+            />
           </li>
         ))}
       </ul>
@@ -337,6 +352,17 @@ export default function PlaygroundHubPage() {
       CHEATSHEET: data.cheatsheets.length,
       JOB: data.jobs.length,
     }
+  }, [data])
+
+  /** One Strapi cover image marked `priority` for LCP (first shelf entry with a cover). */
+  const eagerCoverKey = useMemo(() => {
+    if (!data) return null
+    for (const kind of SECTION_ORDER) {
+      const list = pickItems(data, kind)
+      const hit = list.find((e) => e.cover?.formats?.small?.url ?? e.cover?.url)
+      if (hit) return `${kind}:${hit.id}`
+    }
+    return null
   }, [data])
 
   const header = data?.header
@@ -508,7 +534,13 @@ export default function PlaygroundHubPage() {
 
         {status === "success" && data && counts && counts.all > 0
           ? SECTION_ORDER.map((kind) => (
-              <SectionBlock key={kind} kind={kind} items={pickItems(data, kind)} filter={filter} />
+              <SectionBlock
+                key={kind}
+                kind={kind}
+                items={pickItems(data, kind)}
+                filter={filter}
+                eagerCoverKey={eagerCoverKey}
+              />
             ))
           : null}
 

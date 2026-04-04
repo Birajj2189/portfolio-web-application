@@ -78,6 +78,7 @@ function Lightbox({ tiles, index, onClose, onPrev, onNext }: Readonly<LightboxPr
             src={src}
             alt={tile.image?.alternativeText ?? tile.caption ?? "Gallery photo"}
             fill
+            priority
             className="object-contain"
             sizes="80vw"
           />
@@ -122,9 +123,11 @@ function Lightbox({ tiles, index, onClose, onPrev, onNext }: Readonly<LightboxPr
 interface BentoTileProps {
   tile: GalleryTile
   onOpen: () => void
+  /** First bento cells are in the initial viewport — improves LCP when Strapi images are largest paint. */
+  priority?: boolean
 }
 
-function BentoTile({ tile, onOpen }: Readonly<BentoTileProps>) {
+function BentoTile({ tile, onOpen, priority = false }: Readonly<BentoTileProps>) {
   const spanClass = SPAN_MAP[tile.size] ?? SPAN_MAP["1x1"]
   const src = strapiImageUrl(tile.image?.formats?.medium?.url ?? tile.image?.url ?? "")
 
@@ -139,6 +142,7 @@ function BentoTile({ tile, onOpen }: Readonly<BentoTileProps>) {
           src={src}
           alt={tile.image?.alternativeText ?? tile.caption ?? "Gallery photo"}
           fill
+          priority={priority}
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
           sizes="(max-width: 768px) 50vw, 25vw"
         />
@@ -441,7 +445,12 @@ export default function GalleryPage() {
             {status === "success" && filtered.length > 0 && (
               <div className="grid auto-rows-[180px] grid-cols-4 gap-3">
                 {filtered.map((tile, idx) => (
-                  <BentoTile key={tile.id} tile={tile} onOpen={() => openLightbox(idx)} />
+                  <BentoTile
+                    key={tile.id}
+                    tile={tile}
+                    priority={idx < 6}
+                    onOpen={() => openLightbox(idx)}
+                  />
                 ))}
               </div>
             )}

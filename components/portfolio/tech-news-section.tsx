@@ -22,7 +22,14 @@ function NewsCard({
   item,
   index,
   smoothScroll,
-}: Readonly<{ item: TechNewsItem; index: number; smoothScroll?: boolean }>) {
+  fetchPriority,
+}: Readonly<{
+  item: TechNewsItem
+  index: number
+  smoothScroll?: boolean
+  /** First cards in the strip are often LCP — use Next `priority` (eager, high fetch priority). */
+  fetchPriority?: boolean
+}>) {
   const reduce = useReducedMotion()
   const t = smoothScroll
     ? {
@@ -66,6 +73,7 @@ function NewsCard({
               className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               sizes="300px"
               unoptimized
+              priority={fetchPriority}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-secondary to-accent/10">
@@ -193,7 +201,12 @@ export function TechNewsSection({
                 className="snap-start"
                 style={{ scrollSnapAlign: reduce ? undefined : "start" }}
               >
-                <NewsCard item={item} index={i} smoothScroll={newsCardScrollStagger} />
+                <NewsCard
+                  item={item}
+                  index={i}
+                  smoothScroll={newsCardScrollStagger}
+                  fetchPriority={i < 2}
+                />
               </div>
             ))}
           </div>

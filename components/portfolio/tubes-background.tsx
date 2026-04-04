@@ -10,6 +10,10 @@ function randomHexColors(count: number): string[] {
   })
 }
 
+/**
+ * CDN bundle ships its own Three.js build. Spline (`@splinetool/react-spline`) also bundles Three,
+ * so devtools may warn about multiple Three instances — expected unless you remove one effect.
+ */
 const TUBES_CURSOR_URL =
   "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js" as const
 
