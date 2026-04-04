@@ -63,7 +63,7 @@ export function HillsOutro({ hero, className }: Readonly<HillsOutroProps>) {
         </p>
         <h2
           id="hills-outro-heading"
-          className="max-w-3xl font-poster text-2xl leading-snug font-semibold tracking-tight text-balance text-foreground md:text-4xl lg:text-[2.35rem] lg:leading-tight"
+          className="max-w-3xl font-poster text-2xl leading-snug font-semibold tracking-tight text-balance text-primary [text-shadow:0_0_48px_oklch(0.62_0.14_180_/_0.45),0_0_100px_oklch(0.55_0.12_180_/_0.2)] md:text-4xl lg:text-[2.35rem] lg:leading-tight"
         >
           {statement}
         </h2>

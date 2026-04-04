@@ -232,6 +232,169 @@
   animation: slide-up 0.6s ease-out forwards;
 }
 
+/* Full-page loader — circular orbit (avoids squircle spin wobble) + progress track shine */
+@keyframes loader-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loader-progress-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@keyframes loader-ambient-drift {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06) translate(2%, -1%);
+  }
+}
+
+.animate-loader-orbit {
+  animation: loader-orbit 1.2s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.animate-loader-shimmer {
+  animation: loader-progress-shimmer 2.4s ease-in-out infinite;
+}
+
+.animate-loader-ambient {
+  animation: loader-ambient-drift 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-loader-orbit {
+    animation: none;
+    opacity: 0.45;
+  }
+
+  .animate-loader-shimmer {
+    animation: none;
+  }
+
+  .animate-loader-ambient {
+    animation: none;
+  }
+
+  .animate-loader-cursor-blink {
+    animation: none;
+    opacity: 0.85;
+  }
+
+  .animate-loader-logo-float {
+    animation: none;
+  }
+
+  .animate-loader-logo-glow {
+    animation: none;
+    opacity: 0.55;
+  }
+
+  .animate-loader-mesh {
+    animation: none;
+  }
+
+  .animate-loader-bar-pulse {
+    animation: none;
+  }
+}
+
+/* Loader — terminal cursor, logo motion, subtle mesh (over existing dot + neon stack) */
+@keyframes loader-cursor-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes loader-logo-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes loader-logo-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes loader-mesh-drift {
+  0%,
+  100% {
+    opacity: 0.035;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    opacity: 0.055;
+    transform: translate(-1.2%, 0.8%) rotate(0.5deg);
+  }
+  66% {
+    opacity: 0.048;
+    transform: translate(0.9%, -0.6%) rotate(-0.4deg);
+  }
+}
+
+@keyframes loader-bar-glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 12px oklch(0.55 0.14 180 / 0.35),
+      0 0 28px oklch(0.6 0.12 180 / 0.12);
+  }
+  50% {
+    box-shadow:
+      0 0 18px oklch(0.62 0.15 180 / 0.55),
+      0 0 42px oklch(0.58 0.14 330 / 0.14);
+  }
+}
+
+.animate-loader-cursor-blink {
+  animation: loader-cursor-blink 1.05s steps(1, end) infinite;
+}
+
+.animate-loader-logo-float {
+  animation: loader-logo-float 4.2s ease-in-out infinite;
+}
+
+.animate-loader-logo-glow {
+  animation: loader-logo-glow-pulse 2.8s ease-in-out infinite;
+}
+
+.animate-loader-mesh {
+  animation: loader-mesh-drift 14s ease-in-out infinite;
+}
+
+.animate-loader-bar-pulse {
+  animation: loader-bar-glow-pulse 1.25s ease-in-out 2;
+}
+
 /* Aceternity-style spotlight (About / Spline card) */
 @keyframes spotlight {
   0% {
