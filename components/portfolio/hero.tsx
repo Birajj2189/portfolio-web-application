@@ -1,374 +1,310 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { ArrowDown, Sparkles } from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { HeroProfileJsonPanel } from "@/components/portfolio/hero-profile-json"
+import { CursorDrivenParticleTypography } from "@/components/ui/cursor-driven-particles-typography"
 import { TubesBackground } from "@/components/portfolio/tubes-background"
-import { buildHeroProfileSummary } from "@/lib/hero-profile-summary"
 import type { HeroData } from "@/types/portfolio"
+import { cn } from "@/lib/utils"
 
 interface HeroProps {
   data: HeroData
 }
 
-/** Build rotating / typing source from CMS */
-function useRoleLines(data: HeroData): string[] {
+const PRIMARY_CTA = "See my work"
+const SECONDARY_CTA = "View projects"
+
+const EASE_IN_OUT: [number, number, number, number] = [0.42, 0, 0.58, 1]
+
+/** Canvas must use a concrete family string (matches `Space_Grotesk` in layout) */
+const HERO_POSTER_CANVAS_FONT = "'Space Grotesk', ui-sans-serif, system-ui, sans-serif"
+
+/** Single-line particle strip — full width, height scales with viewport */
+const HERO_NAME_STRIP =
+  "h-[min(16vh,132px)] min-h-[92px] w-full sm:h-[min(17vh,144px)] md:h-[min(18vh,156px)] lg:h-[min(19vh,172px)]"
+
+function useRoleHeadline(data: HeroData): string {
   return useMemo(() => {
     if (data.roleVariants?.length) {
-      return data.roleVariants.map((s) => s.trim()).filter(Boolean)
+      const line = data.roleVariants.map((s) => s.trim()).find(Boolean)
+      if (line) return line
     }
-    const parts = data.role
-      .split("|")
-      .map((s) => s.trim())
-      .filter(Boolean)
-    return parts.length ? parts : [data.role]
+    const parts = data.role.split("|").map((s) => s.trim())
+    return parts.find(Boolean) ?? data.role
   }, [data.role, data.roleVariants])
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Dynamic role: multi-line crossfade OR single typewriter
-// ─────────────────────────────────────────────────────────────────────────────
-function DynamicRole({ lines }: Readonly<{ lines: string[] }>) {
-  const reduceMotion = useReducedMotion()
-  const [index, setIndex] = useState(0)
-  const [typed, setTyped] = useState("")
-  const single = lines.length === 1 ? lines[0] : null
+const LOADER_LABEL = "Loading"
+const LOADER_CHAR_MS = 45
+/** Pause on the full word before handoff to exit animation + page */
+const LOADER_DWELL_MS = 320
 
-  // Rotate when multiple roles
+function LoaderTyping({ onComplete }: Readonly<{ onComplete: () => void }>) {
+  const [text, setText] = useState("")
+
   useEffect(() => {
-    if (lines.length < 2 || reduceMotion) return
-    const id = globalThis.setInterval(() => {
-      setIndex((i) => (i + 1) % lines.length)
-    }, 3800)
-    return () => globalThis.clearInterval(id)
-  }, [lines.length, reduceMotion])
-
-  // Typewriter for single role — setState only inside scheduled callbacks
-  useEffect(() => {
-    let alive = true
-    const timeouts: ReturnType<typeof setTimeout>[] = []
-
-    if (!single || reduceMotion) {
-      const id = globalThis.requestAnimationFrame(() => {
-        if (alive) setTyped(single ?? "")
-      })
-      return () => {
-        alive = false
-        cancelAnimationFrame(id)
-      }
-    }
-
-    const schedule = (fn: () => void, ms: number) => {
-      const id = globalThis.setTimeout(() => {
-        if (alive) fn()
-      }, ms)
-      timeouts.push(id)
-    }
-
-    schedule(() => setTyped(""), 0)
     let i = 0
-    const tick = () => {
-      if (!alive) return
+    let dwellId: ReturnType<typeof globalThis.setTimeout> | undefined
+    let cancelled = false
+
+    const id = globalThis.setInterval(() => {
+      if (cancelled) return
       i += 1
-      setTyped(single.slice(0, i))
-      if (i < single.length) {
-        schedule(tick, 32 + (single.charAt(i - 1) === " " ? 75 : 0))
+      setText(LOADER_LABEL.slice(0, i))
+      if (i >= LOADER_LABEL.length) {
+        globalThis.clearInterval(id)
+        dwellId = globalThis.setTimeout(() => {
+          if (!cancelled) onComplete()
+        }, LOADER_DWELL_MS)
       }
-    }
-    schedule(tick, 480)
+    }, LOADER_CHAR_MS)
 
     return () => {
-      alive = false
-      timeouts.forEach(clearTimeout)
+      cancelled = true
+      globalThis.clearInterval(id)
+      if (dwellId !== undefined) globalThis.clearTimeout(dwellId)
     }
-  }, [single, reduceMotion])
+  }, [onComplete])
 
-  if (lines.length > 1) {
+  return (
+    <p className="font-mono text-xs tracking-[0.35em] text-muted-foreground">
+      {text}
+      <span className="ml-1 inline-block w-px animate-pulse bg-primary" aria-hidden />
+    </p>
+  )
+}
+
+function PosterBottomName({
+  naturalName,
+  displayUpper,
+  reduceMotion,
+}: Readonly<{ naturalName: string; displayUpper: string; reduceMotion: boolean }>) {
+  if (!naturalName) return null
+
+  if (reduceMotion) {
     return (
-      <div className="relative min-h-[2.5rem] sm:min-h-[2.75rem]">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={lines[index]}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-x-0 text-center font-mono text-xl text-muted-foreground sm:text-2xl lg:text-left"
+      <div className="relative z-20 w-full text-foreground">
+        <h1 className="sr-only">{naturalName}</h1>
+        <motion.div
+          className="w-full px-1"
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE_IN_OUT }}
+          aria-hidden
+        >
+          <svg
+            className="block w-full text-foreground"
+            style={{ height: "clamp(2.85rem, min(12vw, 15vh), 6.25rem)" }}
+            viewBox="0 0 1000 200"
+            preserveAspectRatio="xMidYMid meet"
+            aria-hidden
           >
-            {lines[index]}
-          </motion.span>
-        </AnimatePresence>
+            <text
+              x="500"
+              y="132"
+              className="fill-current"
+              style={{
+                fontSize: 118,
+                fontWeight: 700,
+                fontFamily:
+                  'var(--font-hero-poster), "Space Grotesk", ui-sans-serif, system-ui, sans-serif',
+              }}
+              dominantBaseline="middle"
+              textAnchor="middle"
+              textLength="970"
+              lengthAdjust="spacingAndGlyphs"
+            >
+              {displayUpper}
+            </text>
+          </svg>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <span className="block w-full text-center font-mono text-xl text-muted-foreground sm:text-2xl lg:text-left">
-      {typed}
-      <motion.span
-        aria-hidden
-        className="ml-0.5 inline-block h-[1.1em] w-0.5 translate-y-0.5 bg-primary align-middle"
-        animate={reduceMotion ? {} : { opacity: [1, 0.15, 1] }}
-        transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
-      />
-    </span>
-  )
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Hero headline — first / last name, theme-aligned motion
-// ─────────────────────────────────────────────────────────────────────────────
-function parseNameParts(full: string): { first: string; last: string | null } {
-  const parts = full.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return { first: "", last: null }
-  if (parts.length === 1) return { first: parts[0]!, last: null }
-  return { first: parts[0]!, last: parts.slice(1).join(" ") }
-}
-
-function HeroDisplayName({
-  name,
-  reduceMotion,
-}: Readonly<{ name: string; reduceMotion: boolean }>) {
-  const { first, last } = parseNameParts(name)
-  if (!first) return null
-
-  const spring = { type: "spring" as const, stiffness: 120, damping: 22, mass: 0.85 }
-  const springSoft = { type: "spring" as const, stiffness: 90, damping: 20, mass: 0.9 }
-
-  const lastGradient =
-    "bg-gradient-to-br from-primary via-teal-200/90 to-accent bg-[length:180%_180%] bg-clip-text text-transparent"
-
-  return (
-    <div className="relative flex flex-col items-center gap-3 lg:items-start">
-      <motion.p
-        className="mb-0.5 font-sans text-[13px] font-normal tracking-[0.02em] text-zinc-500 italic sm:text-sm"
-        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+    <div className="relative z-20 w-full min-w-0 px-1">
+      <h1 className="sr-only">{naturalName}</h1>
+      <motion.div
+        initial={{ opacity: 0, y: 36 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={reduceMotion ? { duration: 0 } : { ...springSoft, delay: 0.02 }}
+        transition={{ duration: 0.65, delay: 0.12, ease: EASE_IN_OUT }}
+        className="mx-auto w-full max-w-[100vw] min-w-0 text-foreground"
+        aria-hidden
       >
-        Hi, I&apos;m
-      </motion.p>
-
-      <div className="flex flex-col items-center gap-2 sm:gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-start lg:gap-x-4 lg:gap-y-1">
-        {last ? (
-          <>
-            <motion.span
-              className="block text-5xl font-extralight tracking-[-0.03em] text-zinc-50 sm:text-6xl md:text-7xl lg:text-8xl"
-              initial={reduceMotion ? false : { opacity: 0, x: -36 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={reduceMotion ? { duration: 0 } : { ...spring, delay: 0.06 }}
-            >
-              {first}
-            </motion.span>
-
-            <motion.span
-              aria-hidden
-              className="hidden pb-2 font-light text-primary/35 select-none lg:inline lg:text-4xl xl:text-5xl"
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={reduceMotion ? { duration: 0 } : { ...springSoft, delay: 0.14 }}
-            >
-              /
-            </motion.span>
-
-            <motion.span
-              className={`block text-5xl font-semibold tracking-[-0.02em] sm:text-6xl md:text-7xl lg:text-8xl ${lastGradient}`}
-              initial={reduceMotion ? false : { opacity: 0, x: 40 }}
-              animate={
-                reduceMotion
-                  ? { opacity: 1, x: 0 }
-                  : {
-                      opacity: 1,
-                      x: 0,
-                      backgroundPosition: ["0% 40%", "100% 60%", "0% 40%"],
-                    }
-              }
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : {
-                      opacity: { ...spring, delay: 0.12 },
-                      x: { ...spring, delay: 0.12 },
-                      backgroundPosition: { duration: 10, repeat: Infinity, ease: "linear" },
-                    }
-              }
-            >
-              {last}
-            </motion.span>
-          </>
-        ) : (
-          <motion.span
-            className={`block text-5xl font-semibold tracking-[-0.025em] sm:text-6xl md:text-7xl lg:text-8xl ${lastGradient}`}
-            initial={reduceMotion ? false : { opacity: 0, x: 32 }}
-            animate={
-              reduceMotion
-                ? { opacity: 1, x: 0 }
-                : {
-                    opacity: 1,
-                    x: 0,
-                    backgroundPosition: ["0% 40%", "100% 60%", "0% 40%"],
-                  }
-            }
-            transition={
-              reduceMotion
-                ? { duration: 0 }
-                : {
-                    opacity: { ...spring, delay: 0.08 },
-                    x: { ...spring, delay: 0.08 },
-                    backgroundPosition: { duration: 10, repeat: Infinity, ease: "linear" },
-                  }
-            }
-          >
-            {first}
-          </motion.span>
-        )}
-      </div>
+        <CursorDrivenParticleTypography
+          text={displayUpper}
+          className={HERO_NAME_STRIP}
+          fontSize={220}
+          fontFamily={HERO_POSTER_CANVAS_FONT}
+          particleSize={1.75}
+          particleDensity={4}
+          dispersionStrength={20}
+          returnSpeed={0.08}
+          maxFontSizeByWidthFactor={0.28}
+          stretchToCanvasWidth
+          maxHorizontalStretch={80}
+        />
+      </motion.div>
     </div>
   )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Hero
-// ─────────────────────────────────────────────────────────────────────────────
 export function Hero({ data }: Readonly<HeroProps>) {
-  const roleLines = useRoleLines(data)
-  const profileSummary = useMemo(() => buildHeroProfileSummary(data), [data])
   const reduceMotion = useReducedMotion()
+  const reduce = !!reduceMotion
+
+  const [showLoader, setShowLoader] = useState(!reduce)
+  const [revealContent, setRevealContent] = useState(reduce)
+
+  const handleLoaderComplete = useCallback(() => {
+    setShowLoader(false)
+  }, [])
+
+  const primaryLabel = data.ctaPrimaryLabel?.trim() || PRIMARY_CTA
+  const secondaryLabel = data.ctaSecondaryLabel?.trim() || SECONDARY_CTA
+  const roleHeadline = useRoleHeadline(data)
+
+  const tagline = useMemo(() => {
+    const t = (data.tagline ?? "").replaceAll(/\s+/g, " ").trim()
+    return t || "Crafting digital products with clarity, performance, and care."
+  }, [data.tagline])
+
+  const naturalName = useMemo(() => data.name.replaceAll(/\s+/g, " ").trim(), [data.name])
+  const displayUpper = naturalName.toUpperCase()
+
+  const slide = (delay: number, x: number) => ({
+    initial: reduce ? false : { opacity: 0, x },
+    animate: { opacity: 1, x: 0 },
+    transition: { duration: 0.55, delay: reduce ? 0 : delay, ease: EASE_IN_OUT },
+  })
 
   return (
-    <section className="relative overflow-hidden bg-background">
-      <TubesBackground
-        className="min-h-screen"
-        enabled={!reduceMotion}
-        enableClickInteraction={!reduceMotion}
-      >
-        {/* Depth above WebGL, below interactive content */}
+    <section id="hero" className="relative overflow-hidden bg-background">
+      <AnimatePresence onExitComplete={() => setRevealContent(true)}>
+        {showLoader && !reduce ? (
+          <motion.div
+            key="hero-loader"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.32, ease: EASE_IN_OUT }}
+          >
+            <LoaderTyping onComplete={handleLoaderComplete} />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <TubesBackground className="min-h-screen" enabled={!reduce} enableClickInteraction={!reduce}>
         <div className="hero-rim-light pointer-events-none absolute inset-0 z-[1]" aria-hidden />
-        <div className="hero-vignette pointer-events-none absolute inset-0 z-[2]" aria-hidden />
+        <div
+          className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-b from-background/20 via-transparent to-background/95"
+          aria-hidden
+        />
 
-        <div className="pointer-events-none relative z-[3] flex min-h-dvh flex-1 flex-col items-center justify-center">
-          <div className="pointer-events-auto mx-auto w-full max-w-6xl px-4 pb-28 text-center sm:px-5 lg:px-8 lg:pb-32">
-            <div className="grid gap-12 pb-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,400px)] lg:items-center lg:gap-14 lg:gap-y-10 lg:pb-6 lg:text-left">
-              <div className="relative lg:max-w-2xl lg:pr-2">
-                {data.available && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.55 }}
-                    className="glass-card mx-auto mb-7 inline-flex items-center gap-2 rounded-full border-white/10 px-4 py-2 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.45)] lg:mx-0"
+        <div className="pointer-events-none relative z-[3] min-h-dvh">
+          {revealContent ? (
+            <div className="pointer-events-auto flex min-h-dvh flex-col">
+              {/* Upper poster row: pinned to bottom edge of this region, directly above the name */}
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div
+                  className={cn(
+                    "mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-end",
+                    "px-5 pt-24 pb-5 sm:px-8 sm:pt-28 sm:pb-6 md:pb-7 lg:px-10 lg:pb-8"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "grid w-full grid-cols-1 gap-10 sm:gap-8",
+                      "md:grid-cols-2 md:items-end md:gap-x-10 lg:gap-x-16 xl:gap-x-24"
+                    )}
                   >
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                    <span className="text-sm text-muted-foreground">
-                      Available for new opportunities
-                    </span>
-                  </motion.div>
-                )}
+                    {/* Left — status + role (bottom-aligned with right column on md+) */}
+                    <motion.div
+                      className="flex max-w-xl flex-col gap-4 md:max-w-md md:justify-self-start"
+                      {...slide(0.06, -28)}
+                    >
+                      {data.available ? (
+                        <div className="glass-card inline-flex w-fit items-center gap-2 rounded-full border-white/10 px-3 py-1.5">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_10px_oklch(0.75_0.15_180_/_0.7)]" />
+                          <span className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+                            Available for work
+                          </span>
+                        </div>
+                      ) : null}
+                      <h2
+                        className={cn(
+                          "text-left font-poster text-2xl leading-[1.15] font-bold tracking-tight text-foreground sm:text-3xl md:text-[1.75rem] lg:text-3xl xl:text-[2rem]"
+                        )}
+                      >
+                        {roleHeadline}
+                      </h2>
+                    </motion.div>
 
-                <motion.h1
-                  initial={{ opacity: 0, y: 22 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.06, duration: 0.68, ease: [0.22, 1, 0.36, 1] }}
-                  className="mb-5 lg:mb-6"
-                >
-                  <HeroDisplayName name={data.name} reduceMotion={!!reduceMotion} />
-                </motion.h1>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.58 }}
-                  className="mb-6 flex min-h-[2.75rem] items-center justify-center gap-3 sm:min-h-[3rem] lg:justify-start"
-                >
-                  <motion.span
-                    className="h-px w-10 bg-gradient-to-r from-transparent to-border/80 sm:w-12"
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{ scaleX: 1, opacity: 1 }}
-                    transition={{ delay: 0.38, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                  <div className="max-w-[min(100%,22rem)] min-w-0 sm:max-w-none lg:max-w-xl">
-                    <DynamicRole lines={roleLines} />
+                    {/* Right — bio + CTAs: on small screens tuck to the right; on md+ bottom + right aligned */}
+                    <motion.div
+                      className={cn(
+                        "flex max-w-xl flex-col gap-6 md:max-w-md",
+                        "max-md:ml-auto max-md:w-full max-md:max-w-lg max-md:items-end max-md:text-right",
+                        "md:items-end md:justify-self-end md:text-right"
+                      )}
+                      {...slide(0.14, 28)}
+                    >
+                      <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+                        {tagline}
+                      </p>
+                      <div className="flex flex-col gap-4 max-md:items-end md:items-end">
+                        <motion.div
+                          whileHover={reduce ? undefined : { scale: 1.02 }}
+                          whileTap={reduce ? undefined : { scale: 0.98 }}
+                        >
+                          <Button
+                            size="lg"
+                            className={cn(
+                              "h-12 gap-3 rounded-full border-0 bg-primary pr-7 pl-2 text-primary-foreground",
+                              "shadow-[0_16px_48px_-20px_oklch(0.55_0.14_180_/_0.55)]",
+                              "hover:bg-primary/90"
+                            )}
+                            onClick={() =>
+                              document
+                                .getElementById("projects")
+                                ?.scrollIntoView({ behavior: "smooth" })
+                            }
+                          >
+                            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-foreground/15">
+                              <ArrowRight className="h-4 w-4" />
+                            </span>
+                            {primaryLabel}
+                          </Button>
+                        </motion.div>
+                        <button
+                          type="button"
+                          className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary max-md:text-right"
+                          onClick={() =>
+                            document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
+                          }
+                        >
+                          {secondaryLabel} →
+                        </button>
+                      </div>
+                    </motion.div>
                   </div>
-                  <motion.span
-                    className="h-px w-10 bg-gradient-to-l from-transparent to-border/80 sm:w-12"
-                    initial={{ scaleX: 0, opacity: 0 }}
-                    animate={{ scaleX: 1, opacity: 1 }}
-                    transition={{ delay: 0.38, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                </motion.div>
-
-                <motion.p
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                  className="mx-auto mb-9 max-w-xl text-base leading-[1.65] text-muted-foreground/95 sm:text-lg lg:mx-0 lg:mb-10 lg:max-w-lg"
-                >
-                  {data.tagline}
-                </motion.p>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
-                  className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4 lg:justify-start"
-                >
-                  <motion.div
-                    whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
-                    whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  >
-                    <Button
-                      size="lg"
-                      className="glow-teal bg-primary px-8 text-primary-foreground shadow-[0_12px_40px_-16px_oklch(0.55_0.14_180_/_0.45)] hover:bg-primary/90"
-                      onClick={() =>
-                        document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })
-                      }
-                    >
-                      <Sparkles className="mr-2 h-5 w-5" />
-                      {data.ctaPrimaryLabel}
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
-                    whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="border-border/80 bg-background/30 px-8 shadow-[0_8px_28px_-18px_rgba(0,0,0,0.35)] backdrop-blur-[2px] hover:border-accent hover:text-accent"
-                      onClick={() =>
-                        document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })
-                      }
-                    >
-                      {data.ctaSecondaryLabel}
-                    </Button>
-                  </motion.div>
-                </motion.div>
+                </div>
               </div>
 
-              <div className="flex justify-center lg:justify-end lg:pt-2">
-                <HeroProfileJsonPanel summary={profileSummary} />
+              {/* Bottom — single-line name */}
+              <div className="pointer-events-auto shrink-0 border-t border-white/[0.06] bg-background/40 px-3 py-4 backdrop-blur-[2px] sm:px-6 sm:py-5">
+                <PosterBottomName
+                  naturalName={naturalName}
+                  displayUpper={displayUpper}
+                  reduceMotion={reduce}
+                />
               </div>
             </div>
-          </div>
-
-          <motion.div
-            className="pointer-events-auto absolute bottom-8 left-1/2 z-[4] -translate-x-1/2"
-            animate={reduceMotion ? {} : { y: [0, -5, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <a
-              href="#about"
-              className="group glass-card flex items-center gap-2.5 rounded-full border-white/10 px-5 py-2.5 text-sm text-muted-foreground shadow-[0_10px_36px_-14px_rgba(0,0,0,0.4)] transition-all hover:border-primary/45 hover:text-primary"
-            >
-              <span className="font-medium tracking-wide">Scroll to explore</span>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 transition-colors group-hover:bg-primary/40">
-                <ArrowDown className="h-3.5 w-3.5 text-primary" />
-              </span>
-            </a>
-          </motion.div>
+          ) : (
+            <div className="min-h-dvh" aria-hidden />
+          )}
         </div>
       </TubesBackground>
     </section>

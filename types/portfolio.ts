@@ -22,6 +22,8 @@ export interface HeroData {
   available: boolean
   ctaPrimaryLabel: string
   ctaSecondaryLabel: string
+  /** Optional poster hero portrait (path under `public/` or absolute URL). */
+  heroPortraitUrl?: string | null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

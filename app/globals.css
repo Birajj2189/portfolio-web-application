@@ -88,6 +88,7 @@
 @theme inline {
   --font-sans: var(--font-geist-sans), "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono Fallback", ui-monospace, monospace;
+  --font-poster: var(--font-hero-poster), "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
