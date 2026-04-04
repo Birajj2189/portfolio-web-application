@@ -1,5 +1,6 @@
 "use client"
 
+import dynamic from "next/dynamic"
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
@@ -17,7 +18,24 @@ import { AuthModal } from "@/components/portfolio/auth-modal"
 import { GreetingBar } from "@/components/portfolio/greeting-bar"
 import { GalleryTeaser } from "@/components/portfolio/gallery-teaser"
 import { HillsOutro } from "@/components/portfolio/hills-outro"
-import { LoadingScreen, ErrorScreen } from "@/components/portfolio/loading-screen"
+import { ErrorScreen } from "@/components/portfolio/loading-screen"
+
+const LoadingScreen = dynamic(
+  () =>
+    import("@/components/portfolio/loading-screen").then((m) => ({
+      default: m.LoadingScreen,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="dot-pattern fixed inset-0 z-[300] bg-background"
+        aria-busy
+        aria-label="Loading portfolio"
+      />
+    ),
+  }
+)
 import { useUIStore } from "@/store/ui.store"
 import { useAuthStore } from "@/store/auth.store"
 import { usePortfolioStore } from "@/store/portfolio.store"
